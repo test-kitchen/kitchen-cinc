@@ -115,9 +115,9 @@ module Kitchen
       # Modern configuration options (RFC 091 equivalent for Cinc)
       #
 
-      # Setting product_name to nil. It is currently the pivot point
-      # between the two install paths (Mixlib::Install::ScriptGenerator and Mixlib::Install)
-      default_config :product_name
+      # Default product_name to "cinc" so that the modern Mixlib::Install
+      # code path is used automatically.
+      default_config :product_name, "cinc"
 
       default_config :product_version, :latest
 

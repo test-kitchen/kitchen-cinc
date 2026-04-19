@@ -134,8 +134,8 @@ describe Kitchen::Provisioner::CincBase do
       _(provisioner[:encrypted_data_bag_secret_key_path]).must_equal os_safe_root_path("/rooty/<calculated>/encrypted_data_bag_secret_key")
     end
 
-    it ":product_name default to nil" do
-      _(provisioner[:product_name]).must_be_nil
+    it ":product_name defaults to cinc" do
+      _(provisioner[:product_name]).must_equal "cinc"
     end
 
     it ":product_version defaults to :latest" do
@@ -188,8 +188,9 @@ describe Kitchen::Provisioner::CincBase do
       }
     end
 
-    it "returns nil if :require_chef_omnibus is falsey" do
+    it "returns nil if :require_chef_omnibus is falsey and product_name is nil" do
       config[:require_chef_omnibus] = false
+      config[:product_name] = nil
 
       installer.expects(:root).never
       installer.expects(:install_command).never
@@ -198,6 +199,7 @@ describe Kitchen::Provisioner::CincBase do
 
     describe "common behaviour" do
       before do
+        config[:product_name] = nil
         installer.expects(:root).at_least_once.returns("/opt/cinc")
         installer.expects(:install_command)
       end
@@ -554,6 +556,7 @@ describe Kitchen::Provisioner::CincBase do
 
     describe "for bourne shells" do
       before do
+        config[:product_name] = nil
         installer.expects(:root).at_least_once.returns("/opt/cinc")
         installer.expects(:install_command).returns("my_install_command")
       end
@@ -591,6 +594,7 @@ describe Kitchen::Provisioner::CincBase do
 
     describe "for powershell shells on windows os types" do
       before do
+        config[:product_name] = nil
         installer.expects(:root).at_least_once.returns("/opt/cinc")
         installer.expects(:install_command)
         platform.stubs(:shell_type).returns("powershell")
