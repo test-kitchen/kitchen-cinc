@@ -7,12 +7,14 @@ provisioner:
   product_name: cinc
   product_version: latest
   channel: stable
+  deprecations_as_errors: true
 
 verifier:
   name: inspec
 
 platforms:
-  - name: ubuntu-22.04
+  - name: ubuntu-24.04
+  - name: almalinux-9
 
 suites:
   - name: default
