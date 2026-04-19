@@ -1,0 +1,11 @@
+/.bundle/
+/pkg/
+/checksums/
+/vendor/
+/coverage/
+/tmp/
+*.gem
+Gemfile.lock
+.kitchen/
+.kitchen.local.yml
+Policyfile.lock.json

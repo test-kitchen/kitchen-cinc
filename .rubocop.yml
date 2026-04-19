@@ -1,0 +1,7 @@
+AllCops:
+  TargetRubyVersion: 3.4
+  Exclude:
+    - "vendor/**/*"
+    - "spec/**/*"
+
+require: cookstyle/chefstyle

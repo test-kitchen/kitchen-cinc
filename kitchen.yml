@@ -1,0 +1,23 @@
+---
+driver:
+  name: vagrant
+
+provisioner:
+  name: cinc_infra
+  product_name: cinc
+  product_version: latest
+  channel: stable
+
+verifier:
+  name: inspec
+
+platforms:
+  - name: ubuntu-22.04
+
+suites:
+  - name: default
+    run_list:
+      - recipe[test_cookbook::default]
+    verifier:
+      inspec_tests:
+        - test/integration/default
