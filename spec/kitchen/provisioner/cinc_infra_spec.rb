@@ -307,6 +307,33 @@ describe Kitchen::Provisioner::CincInfra do
 
         _(file_no_updated_resources.join).must_match(/handler_file =.*cinc-client-fail-if-update-handler.rb/)
       end
+
+      it "properly escapes double quotes in string values" do
+        config[:client_rb] = {
+          log_file: '/var/log/"test".log',
+        }
+        provisioner.create_sandbox
+
+        _(file).must_include %{log_file "/var/log/\\"test\\".log"}
+      end
+
+      it "properly escapes backslashes in string values" do
+        config[:client_rb] = {
+          log_file: 'C:\\path\\to\\file.log',
+        }
+        provisioner.create_sandbox
+
+        _(file).must_include %{log_file "C:\\\\path\\\\to\\\\file.log"}
+      end
+
+      it "properly escapes both quotes and backslashes in string values" do
+        config[:client_rb] = {
+          log_file: 'C:\\path\\to\\"file".log',
+        }
+        provisioner.create_sandbox
+
+        _(file).must_include %{log_file "C:\\\\path\\\\to\\\\\\"file\\".log"}
+      end
     end
 
     describe "validation.pem file" do

@@ -394,7 +394,7 @@ module Kitchen
         if obj.is_a?(String) && obj =~ /^:/
           obj
         elsif obj.is_a?(String)
-          %{"#{obj.gsub("\\", "\\\\\\\\")}"}
+          %{"#{obj.gsub(/["\\]/) { |m| "\\" + m }}"}
         elsif obj.is_a?(Array)
           %{[#{obj.map { |i| format_value(i) }.join(", ")}]}
         else
