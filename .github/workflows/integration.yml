@@ -13,9 +13,9 @@ env:
   SPEC_OPTS: --format progress
 
 jobs:
-  dokken:
+  ubuntu:
     env:
-      KITCHEN_LOCAL_YAML: kitchen.dokken.yml
+      KITCHEN_LOCAL_YAML: kitchen.exec.yml
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -31,5 +31,116 @@ jobs:
         run: |
           bundle config set --local with 'integration'
           bundle install
-      - name: Verify Dokken
-        run: bundle exec kitchen verify
+      - name: Verify Exec (Ubuntu)
+        run: bundle exec kitchen verify default-localhost
+      - name: Capture kitchen.log on failure
+        if: failure()
+        run: |
+          if [ -f .kitchen/logs/kitchen.log ]; then
+            echo "=== .kitchen/logs/kitchen.log ==="
+            cat .kitchen/logs/kitchen.log
+          fi
+          for f in .kitchen/logs/*.log; do
+            [ -f "$f" ] || continue
+            echo "=== $f ==="
+            cat "$f"
+          done
+      - name: Run kitchen diagnose on failure
+        if: failure()
+        run: bundle exec kitchen diagnose --all || true
+      - name: Show generated client.rb on failure
+        if: failure()
+        run: |
+          find .kitchen /tmp -name "client.rb" -o -name "solo.rb" 2>/dev/null | while read f; do
+            echo "=== $f ==="
+            cat "$f"
+          done || true
+
+  macos:
+    env:
+      KITCHEN_LOCAL_YAML: kitchen.exec.yml
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ["3.4"]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      - name: Setup Machine
+        run: |
+          bundle config set --local with 'integration'
+          bundle install
+      - name: Verify Exec (macOS)
+        run: bundle exec kitchen verify default-localhost
+      - name: Capture kitchen.log on failure
+        if: failure()
+        run: |
+          if [ -f .kitchen/logs/kitchen.log ]; then
+            echo "=== .kitchen/logs/kitchen.log ==="
+            cat .kitchen/logs/kitchen.log
+          fi
+          for f in .kitchen/logs/*.log; do
+            [ -f "$f" ] || continue
+            echo "=== $f ==="
+            cat "$f"
+          done
+      - name: Run kitchen diagnose on failure
+        if: failure()
+        run: bundle exec kitchen diagnose --all || true
+      - name: Show generated client.rb on failure
+        if: failure()
+        run: |
+          find .kitchen /tmp -name "client.rb" -o -name "solo.rb" 2>/dev/null | while read f; do
+            echo "=== $f ==="
+            cat "$f"
+          done || true
+
+  windows:
+    env:
+      KITCHEN_LOCAL_YAML: kitchen.exec.yml
+    runs-on: windows-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ["3.4"]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      - name: Setup Machine
+        run: |
+          bundle config set --local with integration
+          bundle install
+      - name: Verify Exec (Windows)
+        run: bundle exec kitchen verify default-windows-localhost
+      - name: Capture kitchen.log on failure
+        if: failure()
+        shell: pwsh
+        run: |
+          if (Test-Path .kitchen/logs/kitchen.log) {
+            Write-Host "=== .kitchen/logs/kitchen.log ==="
+            Get-Content .kitchen/logs/kitchen.log
+          }
+          Get-ChildItem .kitchen/logs -Filter *.log -ErrorAction SilentlyContinue | ForEach-Object {
+            Write-Host "=== $($_.FullName) ==="
+            Get-Content $_.FullName
+          }
+      - name: Run kitchen diagnose on failure
+        if: failure()
+        continue-on-error: true
+        run: bundle exec kitchen diagnose --all
+      - name: Show generated client.rb on failure
+        if: failure()
+        shell: pwsh
+        run: |
+          Get-ChildItem .kitchen, $env:TEMP -Recurse -Include client.rb,solo.rb -File -ErrorAction SilentlyContinue | ForEach-Object {
+            Write-Host "=== $($_.FullName) ==="
+            Get-Content $_.FullName
+          }

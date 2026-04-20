@@ -1,0 +1,41 @@
+---
+driver:
+  name: exec
+
+transport:
+  name: exec
+
+provisioner:
+  name: cinc_infra
+  product_name: cinc
+  product_version: latest
+  channel: stable
+  deprecations_as_errors: true
+  # Avoid `sudo -E` so sudoers' default env_reset strips host Ruby/Bundler
+  # env (RUBYLIB, GEM_PATH, BUNDLE_*) before invoking cinc-client. Without
+  # this, on co-located CI runners Cinc's embedded Ruby will load the host
+  # Ruby's bundler from the toolcache and fail to resolve workspace gems.
+  sudo_command: sudo
+
+verifier:
+  name: inspec
+
+platforms:
+  - name: localhost
+    provisioner:
+      command_prefix: "unset BUNDLE_GEMFILE BUNDLE_PATH BUNDLE_BIN_PATH BUNDLE_WITHOUT RUBYOPT RUBYLIB GEM_PATH GEM_HOME;"
+  - name: windows-localhost
+    provisioner:
+      # Switch out of the workspace so Bundler/RubyGems can't auto-discover
+      # the workspace's Gemfile or .bundle/config (which would put the host's
+      # vendor/bundle into Gem.path and cause Cinc's embedded Ruby to load
+      # host-built native extensions like date_core.so).
+      command_prefix: "Set-Location $env:TEMP; $env:BUNDLE_GEMFILE=$null; $env:BUNDLE_PATH=$null; $env:BUNDLE_BIN=$null; $env:BUNDLE_BIN_PATH=$null; $env:BUNDLE_APP_CONFIG=$null; $env:BUNDLE_WITHOUT=$null; $env:BUNDLE_IGNORE_CONFIG='true'; $env:RUBYOPT=$null; $env:RUBYLIB=$null; $env:GEM_PATH=$null; $env:GEM_HOME=$null;"
+
+suites:
+  - name: default
+    run_list:
+      - recipe[test_cookbook::default]
+    verifier:
+      inspec_tests:
+        - test/integration/default
