@@ -7,17 +7,17 @@ Gem::Specification.new do |gem|
   gem.name          = "kitchen-cinc"
   gem.version       = Kitchen::Provisioner::CINC_VERSION
   gem.license       = "Apache-2.0"
-  gem.authors       = ["Cinc Project"]
-  gem.email         = ["maintainers@cinc.sh"]
+  gem.authors       = ["Cinc Project", "Lance Albertson"]
+  gem.email         = ["maintainers@cinc.sh", "lance@osuosl.org"]
   gem.description   = "Test Kitchen provisioner for Cinc Client (community distribution of Chef)"
   gem.summary       = gem.description
-  gem.homepage      = "https://cinc.sh/"
+  gem.homepage      = "https://github.com/test-kitchen/kitchen-cinc"
 
   gem.metadata = {
-    "homepage_uri" => "https://cinc.sh/",
-    "source_code_uri" => "https://gitlab.com/cinc-project/kitchen-cinc",
-    "changelog_uri" => "https://gitlab.com/cinc-project/kitchen-cinc/-/blob/main/CHANGELOG.md",
-    "bug_tracker_uri" => "https://gitlab.com/cinc-project/kitchen-cinc/-/issues",
+    "homepage_uri" => "https://github.com/test-kitchen/kitchen-cinc",
+    "source_code_uri" => "https://github.com/test-kitchen/kitchen-cinc",
+    "changelog_uri" => "https://github.com/test-kitchen/kitchen-cinc/blob/main/CHANGELOG.md",
+    "bug_tracker_uri" => "https://github.com/test-kitchen/kitchen-cinc/issues",
   }
 
   # The gemfile and gemspec are necessary for appbundler in Cinc Workstation
