@@ -445,7 +445,6 @@ describe Kitchen::Provisioner::CincInfra do
     # rubocop:enable Metrics/MethodLength, Metrics/AbcSize
 
     describe "for modern Cinc versions" do
-      before { config[:require_cinc_omnibus] = "11.10" }
 
       # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
       def self.common_modern_shell_specs

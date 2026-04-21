@@ -1,39 +1,33 @@
 # Installation Options
 
 These options control how Cinc Client is downloaded and installed on
-the test instance before the converge runs. Two install code paths exist:
+the test instance before the converge runs. Installation is driven by
+`product_name` and the `Mixlib::Install` API, which wraps the omnitruck
+installers.
 
-- **Product mode (preferred)** — driven by `product_name`, uses the
-  modern `Mixlib::Install` API and the omnitruck installers.
-- **Omnibus URL mode (legacy)** — driven by `require_cinc_omnibus`,
-  uses `Mixlib::Install::ScriptGenerator` and the URL in
-  `cinc_omnibus_url`. Used only when `product_name` is not set.
+`product_name` defaults to `"cinc"`, so installation is active by
+default. Set `install_strategy: "skip"` to disable it entirely.
 
-`product_name` defaults to `"cinc"`, so product mode is active by
-default.
-
-## Product mode
-
-### `product_name`
+## `product_name`
 
 - **Type:** String
 - **Default:** `"cinc"`
 - Product to install. Set to `"cinc"` for Cinc Client or
   `"cinc-workstation"` for Cinc Workstation.
 
-### `product_version`
+## `product_version`
 
 - **Type:** String or Symbol
 - **Default:** `:latest`
 - Specific version to install (e.g. `"19.2.12"`) or `:latest`.
 
-### `channel`
+## `channel`
 
 - **Type:** Symbol
 - **Default:** `:stable`
 - Release channel. One of `:stable` or `:current`.
 
-### `install_strategy`
+## `install_strategy`
 
 - **Type:** String
 - **Default:** `"once"`
@@ -42,54 +36,27 @@ default.
   - `"always"` — reinstall on every converge.
   - `"skip"` — skip the install command entirely.
 
-### `download_url`
+## `download_url`
 
 - **Type:** String
 - **Default:** none
 - Override the download URL with a direct package URL. Useful for
   air-gapped environments and internal package mirrors.
 
-### `checksum`
+## `checksum`
 
 - **Type:** String
 - **Default:** none
 - SHA256 checksum used to verify the file fetched from `download_url`.
 
-### `platform`, `platform_version`, `architecture`
+## `platform`, `platform_version`, `architecture`
 
 - **Type:** String
 - **Default:** auto-detected
 - Override platform detection when the omnitruck installer needs help
   identifying the target.
 
-## Omnibus URL mode (legacy)
-
-These options apply only when `product_name` is unset.
-
-### `require_cinc_omnibus`
-
-- **Type:** Boolean or String
-- **Default:** `true`
-- Controls the legacy install code path:
-  - `true` — install the latest version using `cinc_omnibus_url`.
-  - `false` — skip installation; assume Cinc is pre-installed.
-  - `"15.0.0"` (or any version string) — install that specific version.
-
-### `cinc_omnibus_url`
-
-- **Type:** String
-- **Default:** `"https://omnitruck.cinc.sh/install.sh"`
-- URL of the install script used by the legacy install code path.
-
-### `cinc_omnibus_install_options`
-
-- **Type:** String
-- **Default:** none
-- Extra command-line flags appended to the install script invocation.
-  May contain `-P <project>` to select a project and `-d <dir>` to
-  specify a download directory.
-
-### `cinc_omnibus_root` (advanced)
+## `cinc_omnibus_root` (advanced)
 
 - **Type:** String
 - **Default:** set by the installer at runtime (e.g. `/opt/cinc`)

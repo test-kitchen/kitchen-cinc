@@ -20,7 +20,6 @@ require "kitchen"
 require "kitchen/provisioner/cinc_base"
 require "fileutils"
 require "mixlib/install"
-require "mixlib/install/script_generator"
 
 describe Kitchen::Provisioner::CincBase do
   let(:logged_output)   { StringIO.new }
@@ -28,7 +27,6 @@ describe Kitchen::Provisioner::CincBase do
   let(:platform)        { stub(os_type: nil) }
   let(:driver)          { stub(cache_directory: nil) }
   let(:suite)           { stub(name: "fries") }
-  let(:default_version) { true }
 
   let(:config) do
     { test_base_path: "/basist", kitchen_root: "/rooty" }
@@ -53,30 +51,6 @@ describe Kitchen::Provisioner::CincBase do
   end
 
   describe "configuration" do
-    describe "for unix operating systems" do
-      before { platform.stubs(:os_type).returns("unix") }
-
-      it ":cinc_omnibus_url has a default" do
-        _(provisioner[:cinc_omnibus_url]).must_equal "https://omnitruck.cinc.sh/install.sh"
-      end
-    end
-
-    describe "for windows operating systems" do
-      before { platform.stubs(:os_type).returns("windows") }
-
-      it ":cinc_omnibus_url has a default" do
-        _(provisioner[:cinc_omnibus_url]).must_equal "https://omnitruck.cinc.sh/install.sh"
-      end
-    end
-
-    it ":require_cinc_omnibus defaults to true" do
-      _(provisioner[:require_cinc_omnibus]).must_equal true
-    end
-
-    it ":cinc_omnibus_install_options defaults to nil" do
-      _(provisioner[:cinc_omnibus_install_options]).must_be_nil
-    end
-
     it ":run_list defaults to an empty array" do
       _(provisioner[:run_list]).must_equal []
     end
@@ -170,205 +144,19 @@ describe Kitchen::Provisioner::CincBase do
   describe "#install_command" do
     before do
       platform.stubs(:shell_type).returns("bourne")
-      Mixlib::Install::ScriptGenerator.stubs(:new).returns(installer)
     end
 
     let(:installer) { stub(root: "/rooty", install_command: "make_it_so") }
 
     let(:cmd) { provisioner.install_command }
 
-    let(:install_opts) do
-      { omnibus_url: "https://omnitruck.cinc.sh/install.sh",
-        project: nil, install_flags: nil,
-        sudo_command: "sudo -E", http_proxy: nil, https_proxy: nil
-      }
-    end
-
-    it "returns nil if :require_cinc_omnibus is falsey and product_name is nil" do
-      config[:require_cinc_omnibus] = false
+    it "returns nil if :product_name is nil" do
       config[:product_name] = nil
 
-      installer.expects(:root).never
-      installer.expects(:install_command).never
+      Mixlib::Install.expects(:new).never
       _(cmd).must_be_nil
     end
 
-    describe "common behaviour" do
-      before do
-        config[:product_name] = nil
-        installer.expects(:root).at_least_once.returns("/opt/cinc")
-        installer.expects(:install_command)
-      end
-
-      it "passes sensible defaults" do
-        Mixlib::Install::ScriptGenerator.expects(:new)
-          .with(default_version, false, install_opts).returns(installer)
-        cmd
-      end
-
-      it "exports http_proxy & HTTP_PROXY when :http_proxy is set" do
-        config[:http_proxy] = "http://proxy"
-        install_opts[:http_proxy] = "http://proxy"
-
-        Mixlib::Install::ScriptGenerator.expects(:new)
-          .with(default_version, false, install_opts).returns(installer)
-        cmd
-      end
-
-      it "exports https_proxy & HTTPS_PROXY when :https_proxy is set" do
-        config[:https_proxy] = "https://proxy"
-        install_opts[:https_proxy] = "https://proxy"
-
-        Mixlib::Install::ScriptGenerator.expects(:new)
-          .with(default_version, false, install_opts).returns(installer)
-        cmd
-      end
-
-      it "exports all http proxy variables when both are set" do
-        config[:http_proxy] = "http://proxy"
-        config[:https_proxy] = "https://proxy"
-        install_opts[:http_proxy] = "http://proxy"
-        install_opts[:https_proxy] = "https://proxy"
-
-        Mixlib::Install::ScriptGenerator.expects(:new)
-          .with(default_version, false, install_opts).returns(installer)
-        cmd
-      end
-
-      it "installs cinc using :cinc_omnibus_url, if necessary" do
-        config[:cinc_omnibus_url] = "FROM_HERE"
-        install_opts[:omnibus_url] = "FROM_HERE"
-
-        Mixlib::Install::ScriptGenerator.expects(:new)
-          .with(default_version, false, install_opts).returns(installer)
-        cmd
-      end
-
-      it "will install a specific version of cinc, if necessary" do
-        config[:require_cinc_omnibus] = "1.2.3"
-
-        Mixlib::Install::ScriptGenerator.expects(:new)
-          .with("1.2.3", false, install_opts).returns(installer)
-        cmd
-      end
-
-      it "will install a major/minor version of cinc, if necessary" do
-        config[:require_cinc_omnibus] = "11.10"
-
-        Mixlib::Install::ScriptGenerator.expects(:new)
-          .with("11.10", false, install_opts).returns(installer)
-        cmd
-      end
-
-      it "will install a major version of cinc, if necessary" do
-        config[:require_cinc_omnibus] = "12"
-
-        Mixlib::Install::ScriptGenerator.expects(:new)
-          .with("12", false, install_opts).returns(installer)
-        cmd
-      end
-
-      it "will install a nightly, if necessary" do
-        config[:require_cinc_omnibus] =
-          "12.5.0-current.0+20150721082808.git.14.c91b337-1"
-
-        Mixlib::Install::ScriptGenerator.expects(:new).with(
-          "12.5.0-current.0+20150721082808.git.14.c91b337-1",
-          false,
-          install_opts
-        ).returns(installer)
-        cmd
-      end
-
-      it "will install the latest cinc, if necessary" do
-        config[:require_cinc_omnibus] = "latest"
-
-        Mixlib::Install::ScriptGenerator.expects(:new)
-          .with("latest", false, install_opts).returns(installer)
-        cmd
-      end
-
-      it "will install a version of cinc, unless it exists" do
-        config[:require_cinc_omnibus] = true
-
-        Mixlib::Install::ScriptGenerator.expects(:new)
-          .with(default_version, false, install_opts).returns(installer)
-        cmd
-      end
-
-      it "will pass a project, when given" do
-        config[:cinc_omnibus_install_options] = "-P chefdk"
-        install_opts[:install_flags] = "-P chefdk"
-        install_opts[:project] = "chefdk"
-
-        Mixlib::Install::ScriptGenerator.expects(:new)
-          .with(default_version, false, install_opts).returns(installer)
-        cmd
-      end
-
-      it "will pass install options and version info, when given" do
-        config[:require_cinc_omnibus] = "11"
-        config[:cinc_omnibus_install_options] = "-d /tmp/place"
-        install_opts[:install_flags] = "-d /tmp/place"
-
-        Mixlib::Install::ScriptGenerator.expects(:new)
-          .with("11", false, install_opts).returns(installer)
-        cmd
-      end
-
-      it "will set the install root" do
-        config[:cinc_omnibus_root] = "/tmp/test"
-        install_opts[:root] = "/tmp/test"
-
-        Mixlib::Install::ScriptGenerator.expects(:new)
-          .with(default_version, false, install_opts).returns(installer)
-        cmd
-      end
-
-      it "prefixes the whole command with the command_prefix if set" do
-        config[:command_prefix] = "my_prefix"
-
-        _(cmd).must_match(/\Amy_prefix /)
-      end
-
-      it "does not prefix the command if command_prefix is not set" do
-        config[:command_prefix] = nil
-
-        _(cmd).wont_match(/\Amy_prefix /)
-      end
-
-      describe "when driver implements the cache_directory interface" do
-        before { driver.stubs(:cache_directory).returns("/tmp/custom/place") }
-
-        it "will use driver.cache_directory to provide a cache directory" do
-          install_opts[:install_flags] = "-d /tmp/custom/place"
-
-          Mixlib::Install::ScriptGenerator.expects(:new)
-            .with(default_version, false, install_opts).returns(installer)
-          cmd
-        end
-
-        it "will use driver.cache_directory even if other options are given" do
-          config[:cinc_omnibus_install_options] = "-P cool -v 123"
-          install_opts[:install_flags] = "-P cool -v 123 -d /tmp/custom/place"
-          install_opts[:project] = "cool"
-
-          Mixlib::Install::ScriptGenerator.expects(:new)
-            .with(default_version, false, install_opts).returns(installer)
-          cmd
-        end
-
-        it "will not use driver.cache_directory if -d options is given" do
-          config[:cinc_omnibus_install_options] = "-P cool -d /path -v 123"
-          install_opts[:install_flags] = "-P cool -d /path -v 123"
-          install_opts[:project] = "cool"
-
-          Mixlib::Install::ScriptGenerator.expects(:new)
-            .with(default_version, false, install_opts).returns(installer)
-          cmd
-        end
-      end
-    end
 
     describe "for product" do
       before do
@@ -543,81 +331,33 @@ describe Kitchen::Provisioner::CincBase do
 
     describe "for bourne shells" do
       before do
-        config[:product_name] = nil
+        config[:product_name] = "my_product"
         installer.expects(:root).at_least_once.returns("/opt/cinc")
         installer.expects(:install_command).returns("my_install_command")
       end
 
-      it "prepends sudo for sh commands when :sudo is set" do
-        config[:sudo] = true
-        config[:sudo_command] = "my_sudo_command"
-        install_opts_clone = install_opts.clone
-        install_opts_clone[:sudo_command] = config[:sudo_command]
-
-        Mixlib::Install::ScriptGenerator.expects(:new)
-          .with(default_version, false, install_opts_clone).returns(installer)
-        _(cmd).must_equal "my_sudo_command my_install_command"
-      end
-
       it "does not pass shell type for product based command" do
-        config[:product_name] = "product_name"
-
         Mixlib::Install.expects(:new).with do |opts|
           _(opts.key?(:shell_type)).must_equal false
         end.returns(installer)
         cmd
       end
-
-      it "does not sudo for sh commands when :sudo is falsey" do
-        config[:sudo] = false
-
-        install_opts_clone = install_opts.clone
-        install_opts_clone[:sudo_command] = ""
-        Mixlib::Install::ScriptGenerator.expects(:new)
-          .with(default_version, false, install_opts_clone).returns(installer)
-        _(cmd).must_equal "my_install_command"
-      end
     end
 
     describe "for powershell shells on windows os types" do
       before do
-        config[:product_name] = nil
+        config[:product_name] = "my_product"
         installer.expects(:root).at_least_once.returns("/opt/cinc")
         installer.expects(:install_command)
         platform.stubs(:shell_type).returns("powershell")
         platform.stubs(:os_type).returns("windows")
       end
 
-      it "sets the powershell flag for Mixlib::Install" do
-        install_opts_clone = install_opts.clone
-        install_opts_clone[:sudo_command] = ""
-        Mixlib::Install::ScriptGenerator.expects(:new)
-          .with(default_version, true, install_opts_clone).returns(installer)
-        cmd
-      end
-
       it "passes ps1 shell type for product based command" do
-        config[:product_name] = "product_name"
-
         Mixlib::Install.expects(:new).with do |opts|
           _(opts[:shell_type]).must_equal :ps1
         end.returns(installer)
         cmd
-      end
-
-      describe "when driver implements the cache_directory" do
-        before { driver.stubs(:cache_directory).returns('$env:TEMP\\dummy\\place') }
-
-        it "will have the same behavior on windows" do
-          config[:cinc_omnibus_install_options] = "-version 123"
-          install_opts_clone = install_opts.clone
-          install_opts_clone[:sudo_command] = ""
-          install_opts_clone[:install_flags] = "-version 123"
-          install_opts_clone[:install_flags] << ' -download_directory $env:TEMP\\dummy\\place'
-          Mixlib::Install::ScriptGenerator.expects(:new)
-            .with(default_version, true, install_opts_clone).returns(installer)
-          cmd
-        end
       end
     end
   end
@@ -777,37 +517,6 @@ describe Kitchen::Provisioner::CincBase do
 
         decoded = decode_powershell_command(cmd)
         _(decoded).must_match regexify(%{$root_path = "RIGHT_HERE"})
-      end
-    end
-  end
-
-  describe "#product_version" do
-    describe "when require_cinc_omnibus is true and product_version is not set" do
-      it "returns :latest" do
-        config[:require_cinc_omnibus] = true
-        _(provisioner.product_version).must_equal :latest
-      end
-    end
-
-    describe "when require_cinc_omnibus is false and product_version is nil" do
-      it "returns nil" do
-        config[:product_version] = nil
-        config[:require_cinc_omnibus] = false
-        _(provisioner.product_version).must_be_nil
-      end
-    end
-
-    describe "when require_cinc_omnibus is a string" do
-      it "returns the require_cinc_omnibus string" do
-        config[:require_cinc_omnibus] = "15.0.0"
-        _(provisioner.product_version).must_match "15.0.0"
-      end
-    end
-
-    describe "when product_version is set" do
-      it "returns the product_version string" do
-        config[:product_version] = "15.0.0"
-        _(provisioner.product_version).must_match "15.0.0"
       end
     end
   end

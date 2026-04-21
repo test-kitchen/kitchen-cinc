@@ -47,10 +47,9 @@ Test Kitchen install/init lifecycle:
 
 Installation options from [installation.md](installation.md)
 (`product_name`, `product_version`, `channel`, `download_url`,
-`require_cinc_omnibus`, etc.) have no effect on the test instance,
-since nothing is installed there. They still control how `cinc-client`
-itself behaves on the workstation when the modern `Mixlib::Install`
-code path is used.
+etc.) have no effect on the test instance, since nothing is installed
+there. They still control how `cinc-client` itself behaves on the
+workstation.
 
 ## Example
 
