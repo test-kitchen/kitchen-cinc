@@ -103,126 +103,22 @@ platforms:
 
 ### Configuration Options
 
-#### `product_name`
+Every option exposed by the provisioners is documented under
+[`docs/`](docs/README.md):
 
-- **Type:** String
-- **Default:** `cinc`
-- **Description:** The product to install. Set to `cinc` for Cinc Client or `cinc-workstation` for Cinc Workstation.
-
-#### `product_version`
-
-- **Type:** String
-- **Default:** `latest`
-- **Description:** The version of Cinc Client to install. Can be a specific version (e.g., `19.2.12`) or `latest`.
-
-#### `channel`
-
-- **Type:** String/Symbol
-- **Default:** `stable`
-- **Options:** `stable`, `current`
-- **Description:** The release channel to install from.
-
-#### `install_strategy`
-
-- **Type:** String
-- **Default:** `once`
-- **Options:** `once`, `always`
-- **Description:** When to install Cinc. `once` only installs if not present, `always` reinstalls on every converge.
-
-#### `download_url`
-
-- **Type:** String
-- **Default:** none
-- **Description:** Override the download URL for custom package locations or air-gapped environments.
-
-#### `checksum`
-
-- **Type:** String
-- **Default:** none
-- **Description:** SHA256 checksum to verify the downloaded package. Used with `download_url`.
-
-#### `platform`, `platform_version`, `architecture`
-
-- **Type:** String
-- **Default:** Auto-detected
-- **Description:** Explicitly specify platform details for package selection.
-
-#### `run_list`
-
-- **Type:** Array
-- **Default:** `[]`
-- **Description:** The Cinc run list to execute.
-
-#### `attributes`
-
-- **Type:** Hash
-- **Default:** `{}`
-- **Description:** Node attributes to set during the converge.
-
-#### `log_level`
-
-- **Type:** String
-- **Default:** `auto`
-- **Description:** Cinc log level. Set to `debug` for verbose output, or `auto` to let Cinc decide.
-
-#### `log_file`
-
-- **Type:** String
-- **Default:** none
-- **Description:** Path to write the Cinc log file on the test instance.
-
-#### `multiple_converge`
-
-- **Type:** Integer
-- **Default:** `1`
-- **Description:** Number of times to run converge. Useful with `enforce_idempotency`.
-
-#### `enforce_idempotency`
-
-- **Type:** Boolean
-- **Default:** `false`
-- **Description:** When `true`, fails the run if the second converge makes changes. Requires `multiple_converge` >= 2.
-
-#### `deprecations_as_errors`
-
-- **Type:** Boolean
-- **Default:** `false`
-- **Description:** Treat Cinc deprecation warnings as errors.
-
-### Policyfile Support
-
-kitchen-cinc auto-detects `Policyfile.rb` in your cookbook directory and uses it for dependency resolution. You can also configure it explicitly:
-
-```yaml
-provisioner:
-  name: cinc_infra
-  policyfile_path: path/to/Policyfile.rb
-  policy_group: local
-  always_update_cookbooks: true
-```
-
-### Berkshelf Support
-
-If no Policyfile is found, kitchen-cinc will fall back to Berkshelf if a `Berksfile` is present:
-
-```yaml
-provisioner:
-  name: cinc_infra
-  berksfile_path: path/to/Berksfile
-  always_update_cookbooks: true
-```
-
-### Path Configuration
-
-All paths are auto-calculated if not specified:
-
-- `data_path` — Path to data directory
-- `data_bags_path` — Path to data bags
-- `environments_path` — Path to environments
-- `nodes_path` — Path to node definitions
-- `roles_path` — Path to roles
-- `clients_path` — Path to clients
-- `encrypted_data_bag_secret_key_path` — Path to encryption key
+- [Provisioners](docs/provisioners.md) — overview of `cinc_infra`,
+  `cinc_zero`, `cinc_solo`, `cinc_apply`, and `cinc_target`.
+- [Installation options](docs/installation.md) — `product_name`,
+  `product_version`, `channel`, `install_strategy`, `download_url`,
+  `checksum`, proxies, and the legacy omnibus options.
+- [Converge options](docs/converge.md) — `run_list`, `attributes`,
+  logging, `multiple_converge`, `enforce_idempotency`, `client_rb` /
+  `solo_rb`, Chef Zero host/port, and more.
+- [Cookbook resolution](docs/cookbook-resolution.md) — Policyfile and
+  Berkshelf integration.
+- [Paths](docs/paths.md) — sandbox, on-instance, and binary paths.
+- [Target mode](docs/target-mode.md) — extra requirements and option
+  overrides for `cinc_target`.
 
 ## Development
 
