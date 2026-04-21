@@ -54,14 +54,14 @@ describe Kitchen::Provisioner::CincApply do
     describe "for unix operating systems" do
       before { platform.stubs(:os_type).returns("unix") }
 
-      it "sets :chef_apply_path to a path using :chef_omnibus_root" do
-        config[:chef_omnibus_root] = "/nice/place"
+      it "sets :cinc_apply_path to a path using :cinc_omnibus_root" do
+        config[:cinc_omnibus_root] = "/nice/place"
 
-        _(provisioner[:chef_apply_path]).must_equal "/nice/place/bin/cinc-apply"
+        _(provisioner[:cinc_apply_path]).must_equal "/nice/place/bin/cinc-apply"
       end
 
       it "sets :ruby_bindir to use an Omnibus Ruby" do
-        config[:chef_omnibus_root] = "/nice"
+        config[:cinc_omnibus_root] = "/nice"
 
         _(provisioner[:ruby_bindir]).must_equal "/nice/embedded/bin"
       end
@@ -70,14 +70,14 @@ describe Kitchen::Provisioner::CincApply do
     describe "for windows operating systems" do
       before { platform.stubs(:os_type).returns("windows") }
 
-      it "sets :chef_apply_path to a path using :chef_omnibus_root" do
-        config[:chef_omnibus_root] = '$env:systemdrive\\nice\\place'
+      it "sets :cinc_apply_path to a path using :cinc_omnibus_root" do
+        config[:cinc_omnibus_root] = '$env:systemdrive\\nice\\place'
 
-        _(provisioner[:chef_apply_path]).must_equal '$env:systemdrive\\nice\\place\\bin\\cinc-apply.bat'
+        _(provisioner[:cinc_apply_path]).must_equal '$env:systemdrive\\nice\\place\\bin\\cinc-apply.bat'
       end
 
       it "sets :ruby_bindir to use an Omnibus Ruby" do
-        config[:chef_omnibus_root] = 'c:\\nice'
+        config[:cinc_omnibus_root] = 'c:\\nice'
 
         _(provisioner[:ruby_bindir]).must_equal 'c:\\nice\\embedded\\bin'
       end
@@ -95,14 +95,14 @@ describe Kitchen::Provisioner::CincApply do
       before { platform.stubs(:shell_type).returns("bourne") }
 
       it "uses sudo for cinc-apply when configured" do
-        config[:chef_omnibus_root] = "/c"
+        config[:cinc_omnibus_root] = "/c"
         config[:sudo] = true
 
         _(cmd).must_match regexify("sudo -E /c/bin/cinc-apply ", :partial_line)
       end
 
       it "does not use sudo for cinc-apply when configured" do
-        config[:chef_omnibus_root] = "/c"
+        config[:cinc_omnibus_root] = "/c"
         config[:sudo] = false
 
         _(cmd).must_match regexify("/c/bin/cinc-apply ", :partial_line)
@@ -136,8 +136,8 @@ describe Kitchen::Provisioner::CincApply do
         platform.stubs(:os_type).returns("windows")
       end
 
-      it "calls the cinc-apply command from :chef_apply_path" do
-        config[:chef_apply_path] = '\\r\\cinc-apply.bat'
+      it "calls the cinc-apply command from :cinc_apply_path" do
+        config[:cinc_apply_path] = '\\r\\cinc-apply.bat'
 
         _(cmd).must_match regexify('& \\r\\cinc-apply.bat ', :partial_line)
       end

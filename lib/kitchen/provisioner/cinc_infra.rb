@@ -29,18 +29,18 @@ module Kitchen
       default_config :client_rb, {}
       default_config :named_run_list, {}
       default_config :json_attributes, true
-      default_config :chef_zero_host, nil
-      default_config :chef_zero_port, 8889
+      default_config :cinc_zero_host, nil
+      default_config :cinc_zero_port, 8889
 
-      default_config :chef_client_path do |provisioner|
+      default_config :cinc_client_path do |provisioner|
         provisioner
-          .remote_path_join(%W{#{provisioner[:chef_omnibus_root]} bin cinc-client})
+          .remote_path_join(%W{#{provisioner[:cinc_omnibus_root]} bin cinc-client})
           .tap { |path| path.concat(".bat") if provisioner.windows_os? }
       end
 
       default_config :ruby_bindir do |provisioner|
         provisioner
-          .remote_path_join(%W{#{provisioner[:chef_omnibus_root]} embedded bin})
+          .remote_path_join(%W{#{provisioner[:cinc_omnibus_root]} embedded bin})
       end
 
       # (see Base#create_sandbox)
@@ -51,7 +51,7 @@ module Kitchen
       end
 
       def run_command
-        cmd = "#{sudo(config[:chef_client_path])} --local-mode".tap { |str| str.insert(0, "& ") if powershell_shell? }
+        cmd = "#{sudo(config[:cinc_client_path])} --local-mode".tap { |str| str.insert(0, "& ") if powershell_shell? }
 
         chef_cmd(cmd)
       end
@@ -73,12 +73,12 @@ module Kitchen
 
         # these flags are cinc-client local mode only and will not work
         # on older versions of cinc-client
-        if config[:chef_zero_host]
-          args << "--chef-zero-host #{config[:chef_zero_host]}"
+        if config[:cinc_zero_host]
+          args << "--chef-zero-host #{config[:cinc_zero_host]}"
         end
 
-        if config[:chef_zero_port]
-          args << "--chef-zero-port #{config[:chef_zero_port]}"
+        if config[:cinc_zero_port]
+          args << "--chef-zero-port #{config[:cinc_zero_port]}"
         end
 
         args << "--profile-ruby" if config[:profile_ruby]

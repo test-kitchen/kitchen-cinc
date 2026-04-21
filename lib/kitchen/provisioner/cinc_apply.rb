@@ -55,15 +55,15 @@ module Kitchen
 
       plugin_version Kitchen::VERSION
 
-      default_config :chef_apply_path do |provisioner|
+      default_config :cinc_apply_path do |provisioner|
         provisioner
-          .remote_path_join(%W{#{provisioner[:chef_omnibus_root]} bin cinc-apply})
+          .remote_path_join(%W{#{provisioner[:cinc_omnibus_root]} bin cinc-apply})
           .tap { |path| path.concat(".bat") if provisioner.windows_os? }
       end
 
       default_config :ruby_bindir do |provisioner|
         provisioner
-          .remote_path_join(%W{#{provisioner[:chef_omnibus_root]} embedded bin})
+          .remote_path_join(%W{#{provisioner[:cinc_omnibus_root]} embedded bin})
       end
 
       default_config :apply_path do |provisioner|
@@ -102,7 +102,7 @@ module Kitchen
         level = config[:log_level]
         lines = []
         config[:run_list].map do |recipe|
-          cmd = sudo(config[:chef_apply_path]).dup
+          cmd = sudo(config[:cinc_apply_path]).dup
             .tap { |str| str.insert(0, "& ") if powershell_shell? }
           args = [
             "apply/#{recipe}.rb",

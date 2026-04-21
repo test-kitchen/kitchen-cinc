@@ -54,14 +54,14 @@ describe Kitchen::Provisioner::CincInfra do
     describe "for unix operating systems" do
       before { platform.stubs(:os_type).returns("unix") }
 
-      it "sets :chef_client_path to a path using :chef_omnibus_root" do
-        config[:chef_omnibus_root] = "/nice/place"
+      it "sets :cinc_client_path to a path using :cinc_omnibus_root" do
+        config[:cinc_omnibus_root] = "/nice/place"
 
-        _(provisioner[:chef_client_path]).must_equal "/nice/place/bin/cinc-client"
+        _(provisioner[:cinc_client_path]).must_equal "/nice/place/bin/cinc-client"
       end
 
       it "sets :ruby_bindir to use an Omnibus Ruby" do
-        config[:chef_omnibus_root] = "/nice"
+        config[:cinc_omnibus_root] = "/nice"
 
         _(provisioner[:ruby_bindir]).must_equal "/nice/embedded/bin"
       end
@@ -70,14 +70,14 @@ describe Kitchen::Provisioner::CincInfra do
     describe "for windows operating systems" do
       before { platform.stubs(:os_type).returns("windows") }
 
-      it "sets :chef_client_path to a path using :chef_omnibus_root" do
-        config[:chef_omnibus_root] = '$env:systemdrive\\nice\\place'
+      it "sets :cinc_client_path to a path using :cinc_omnibus_root" do
+        config[:cinc_omnibus_root] = '$env:systemdrive\\nice\\place'
 
-        _(provisioner[:chef_client_path]).must_equal '$env:systemdrive\\nice\\place\\bin\\cinc-client.bat'
+        _(provisioner[:cinc_client_path]).must_equal '$env:systemdrive\\nice\\place\\bin\\cinc-client.bat'
       end
 
       it "sets :ruby_bindir to use an Omnibus Ruby" do
-        config[:chef_omnibus_root] = 'c:\\nice'
+        config[:cinc_omnibus_root] = 'c:\\nice'
 
         _(provisioner[:ruby_bindir]).must_equal 'c:\\nice\\embedded\\bin'
       end
@@ -91,12 +91,12 @@ describe Kitchen::Provisioner::CincInfra do
       _(provisioner[:json_attributes]).must_equal true
     end
 
-    it "does not set :chef_zero_host" do
-      _(provisioner[:chef_zero_host]).must_be_nil
+    it "does not set :cinc_zero_host" do
+      _(provisioner[:cinc_zero_host]).must_be_nil
     end
 
-    it "sets :chef_zero_port to 8889" do
-      _(provisioner[:chef_zero_port]).must_equal 8889
+    it "sets :cinc_zero_port to 8889" do
+      _(provisioner[:cinc_zero_port]).must_equal 8889
     end
   end
 
@@ -445,7 +445,7 @@ describe Kitchen::Provisioner::CincInfra do
     # rubocop:enable Metrics/MethodLength, Metrics/AbcSize
 
     describe "for modern Cinc versions" do
-      before { config[:require_chef_omnibus] = "11.10" }
+      before { config[:require_cinc_omnibus] = "11.10" }
 
       # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
       def self.common_modern_shell_specs
@@ -458,25 +458,25 @@ describe Kitchen::Provisioner::CincInfra do
         end
 
         it "sets chef zero host flag for custom host" do
-          config[:chef_zero_host] = "192.168.0.1"
+          config[:cinc_zero_host] = "192.168.0.1"
 
           _(cmd).must_match regexify(" --chef-zero-host 192.168.0.1", :partial_line)
         end
 
         it "sets chef zero port flag for custom port" do
-          config[:chef_zero_port] = 123
+          config[:cinc_zero_port] = 123
 
           _(cmd).must_match regexify(" --chef-zero-port 123", :partial_line)
         end
 
         it "does not set chef zero host flag when value is falsey" do
-          config[:chef_zero_host] = nil
+          config[:cinc_zero_host] = nil
 
           _(cmd).wont_match regexify(" --chef-zero-host ", :partial_line)
         end
 
         it "does not set chef zero port flag when value is falsey" do
-          config[:chef_zero_port] = nil
+          config[:cinc_zero_port] = nil
 
           _(cmd).wont_match regexify(" --chef-zero-port ", :partial_line)
         end
@@ -579,14 +579,14 @@ describe Kitchen::Provisioner::CincInfra do
         end
 
         it "uses sudo for cinc-client when configured" do
-          config[:chef_omnibus_root] = "/c"
+          config[:cinc_omnibus_root] = "/c"
           config[:sudo] = true
 
           _(cmd).must_match regexify("sudo -E /c/bin/cinc-client ", :partial_line)
         end
 
         it "does not use sudo for cinc-client when configured" do
-          config[:chef_omnibus_root] = "/c"
+          config[:cinc_omnibus_root] = "/c"
           config[:sudo] = false
 
           _(cmd).must_match regexify("/c/bin/cinc-client ", :partial_line)
@@ -655,8 +655,8 @@ describe Kitchen::Provisioner::CincInfra do
           "} catch { $env:PATH }")
         end
 
-        it "calls the cinc-client command from :chef_client_path" do
-          config[:chef_client_path] = '\\r\\cinc-client.bat'
+        it "calls the cinc-client command from :cinc_client_path" do
+          config[:cinc_client_path] = '\\r\\cinc-client.bat'
 
           _(cmd).must_match regexify('& \\r\\cinc-client.bat ', :partial_line)
         end

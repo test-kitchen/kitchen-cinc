@@ -54,14 +54,14 @@ describe Kitchen::Provisioner::CincSolo do
     describe "for unix operating systems" do
       before { platform.stubs(:os_type).returns("unix") }
 
-      it "sets :chef_solo_path to a path using :chef_omnibus_root" do
-        config[:chef_omnibus_root] = "/nice/place"
+      it "sets :cinc_solo_path to a path using :cinc_omnibus_root" do
+        config[:cinc_omnibus_root] = "/nice/place"
 
-        _(provisioner[:chef_solo_path]).must_equal "/nice/place/bin/cinc-solo"
+        _(provisioner[:cinc_solo_path]).must_equal "/nice/place/bin/cinc-solo"
       end
 
       it "sets :ruby_bindir to use an Omnibus Ruby" do
-        config[:chef_omnibus_root] = "/nice"
+        config[:cinc_omnibus_root] = "/nice"
 
         _(provisioner[:ruby_bindir]).must_equal "/nice/embedded/bin"
       end
@@ -70,14 +70,14 @@ describe Kitchen::Provisioner::CincSolo do
     describe "for windows operating systems" do
       before { platform.stubs(:os_type).returns("windows") }
 
-      it "sets :chef_solo_path to a path using :chef_omnibus_root" do
-        config[:chef_omnibus_root] = '$env:systemdrive\\nice\\place'
+      it "sets :cinc_solo_path to a path using :cinc_omnibus_root" do
+        config[:cinc_omnibus_root] = '$env:systemdrive\\nice\\place'
 
-        _(provisioner[:chef_solo_path]).must_equal '$env:systemdrive\\nice\\place\\bin\\cinc-solo.bat'
+        _(provisioner[:cinc_solo_path]).must_equal '$env:systemdrive\\nice\\place\\bin\\cinc-solo.bat'
       end
 
       it "sets :ruby_bindir to use an Omnibus Ruby" do
-        config[:chef_omnibus_root] = 'c:\\nice'
+        config[:cinc_omnibus_root] = 'c:\\nice'
 
         _(provisioner[:ruby_bindir]).must_equal 'c:\\nice\\embedded\\bin'
       end
@@ -420,14 +420,14 @@ describe Kitchen::Provisioner::CincSolo do
       end
 
       it "uses sudo for cinc-solo when configured" do
-        config[:chef_omnibus_root] = "/c"
+        config[:cinc_omnibus_root] = "/c"
         config[:sudo] = true
 
         _(cmd).must_match regexify("sudo -E /c/bin/cinc-solo ", :partial_line)
       end
 
       it "does not use sudo for cinc-solo when configured" do
-        config[:chef_omnibus_root] = "/c"
+        config[:cinc_omnibus_root] = "/c"
         config[:sudo] = false
 
         _(cmd).must_match regexify("/c/bin/cinc-solo ", :partial_line)
@@ -483,8 +483,8 @@ describe Kitchen::Provisioner::CincSolo do
         "} catch { $env:PATH }")
       end
 
-      it "calls the cinc-solo command from :chef_solo_path" do
-        config[:chef_solo_path] = '\\r\\cinc-solo.bat'
+      it "calls the cinc-solo command from :cinc_solo_path" do
+        config[:cinc_solo_path] = '\\r\\cinc-solo.bat'
 
         _(cmd).must_match regexify('& \\r\\cinc-solo.bat ', :partial_line)
       end

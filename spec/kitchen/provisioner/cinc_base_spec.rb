@@ -56,29 +56,25 @@ describe Kitchen::Provisioner::CincBase do
     describe "for unix operating systems" do
       before { platform.stubs(:os_type).returns("unix") }
 
-      it ":chef_omnibus_url has a default" do
-        _(provisioner[:chef_omnibus_url]).must_equal "https://omnitruck.cinc.sh/install.sh"
-      end
-
-      it ":chef_metadata_url defaults to nil" do
-        _(provisioner[:chef_metadata_url]).must_be_nil
+      it ":cinc_omnibus_url has a default" do
+        _(provisioner[:cinc_omnibus_url]).must_equal "https://omnitruck.cinc.sh/install.sh"
       end
     end
 
     describe "for windows operating systems" do
       before { platform.stubs(:os_type).returns("windows") }
 
-      it ":chef_omnibus_url has a default" do
-        _(provisioner[:chef_omnibus_url]).must_equal "https://omnitruck.cinc.sh/install.sh"
+      it ":cinc_omnibus_url has a default" do
+        _(provisioner[:cinc_omnibus_url]).must_equal "https://omnitruck.cinc.sh/install.sh"
       end
     end
 
-    it ":require_chef_omnibus defaults to true" do
-      _(provisioner[:require_chef_omnibus]).must_equal true
+    it ":require_cinc_omnibus defaults to true" do
+      _(provisioner[:require_cinc_omnibus]).must_equal true
     end
 
-    it ":chef_omnibus_install_options defaults to nil" do
-      _(provisioner[:chef_omnibus_install_options]).must_be_nil
+    it ":cinc_omnibus_install_options defaults to nil" do
+      _(provisioner[:cinc_omnibus_install_options]).must_be_nil
     end
 
     it ":run_list defaults to an empty array" do
@@ -188,8 +184,8 @@ describe Kitchen::Provisioner::CincBase do
       }
     end
 
-    it "returns nil if :require_chef_omnibus is falsey and product_name is nil" do
-      config[:require_chef_omnibus] = false
+    it "returns nil if :require_cinc_omnibus is falsey and product_name is nil" do
+      config[:require_cinc_omnibus] = false
       config[:product_name] = nil
 
       installer.expects(:root).never
@@ -239,8 +235,8 @@ describe Kitchen::Provisioner::CincBase do
         cmd
       end
 
-      it "installs cinc using :chef_omnibus_url, if necessary" do
-        config[:chef_omnibus_url] = "FROM_HERE"
+      it "installs cinc using :cinc_omnibus_url, if necessary" do
+        config[:cinc_omnibus_url] = "FROM_HERE"
         install_opts[:omnibus_url] = "FROM_HERE"
 
         Mixlib::Install::ScriptGenerator.expects(:new)
@@ -249,7 +245,7 @@ describe Kitchen::Provisioner::CincBase do
       end
 
       it "will install a specific version of cinc, if necessary" do
-        config[:require_chef_omnibus] = "1.2.3"
+        config[:require_cinc_omnibus] = "1.2.3"
 
         Mixlib::Install::ScriptGenerator.expects(:new)
           .with("1.2.3", false, install_opts).returns(installer)
@@ -257,7 +253,7 @@ describe Kitchen::Provisioner::CincBase do
       end
 
       it "will install a major/minor version of cinc, if necessary" do
-        config[:require_chef_omnibus] = "11.10"
+        config[:require_cinc_omnibus] = "11.10"
 
         Mixlib::Install::ScriptGenerator.expects(:new)
           .with("11.10", false, install_opts).returns(installer)
@@ -265,7 +261,7 @@ describe Kitchen::Provisioner::CincBase do
       end
 
       it "will install a major version of cinc, if necessary" do
-        config[:require_chef_omnibus] = "12"
+        config[:require_cinc_omnibus] = "12"
 
         Mixlib::Install::ScriptGenerator.expects(:new)
           .with("12", false, install_opts).returns(installer)
@@ -273,7 +269,7 @@ describe Kitchen::Provisioner::CincBase do
       end
 
       it "will install a nightly, if necessary" do
-        config[:require_chef_omnibus] =
+        config[:require_cinc_omnibus] =
           "12.5.0-current.0+20150721082808.git.14.c91b337-1"
 
         Mixlib::Install::ScriptGenerator.expects(:new).with(
@@ -285,7 +281,7 @@ describe Kitchen::Provisioner::CincBase do
       end
 
       it "will install the latest cinc, if necessary" do
-        config[:require_chef_omnibus] = "latest"
+        config[:require_cinc_omnibus] = "latest"
 
         Mixlib::Install::ScriptGenerator.expects(:new)
           .with("latest", false, install_opts).returns(installer)
@@ -293,7 +289,7 @@ describe Kitchen::Provisioner::CincBase do
       end
 
       it "will install a version of cinc, unless it exists" do
-        config[:require_chef_omnibus] = true
+        config[:require_cinc_omnibus] = true
 
         Mixlib::Install::ScriptGenerator.expects(:new)
           .with(default_version, false, install_opts).returns(installer)
@@ -301,7 +297,7 @@ describe Kitchen::Provisioner::CincBase do
       end
 
       it "will pass a project, when given" do
-        config[:chef_omnibus_install_options] = "-P chefdk"
+        config[:cinc_omnibus_install_options] = "-P chefdk"
         install_opts[:install_flags] = "-P chefdk"
         install_opts[:project] = "chefdk"
 
@@ -311,8 +307,8 @@ describe Kitchen::Provisioner::CincBase do
       end
 
       it "will pass install options and version info, when given" do
-        config[:require_chef_omnibus] = "11"
-        config[:chef_omnibus_install_options] = "-d /tmp/place"
+        config[:require_cinc_omnibus] = "11"
+        config[:cinc_omnibus_install_options] = "-d /tmp/place"
         install_opts[:install_flags] = "-d /tmp/place"
 
         Mixlib::Install::ScriptGenerator.expects(:new)
@@ -321,17 +317,8 @@ describe Kitchen::Provisioner::CincBase do
       end
 
       it "will set the install root" do
-        config[:chef_omnibus_root] = "/tmp/test"
+        config[:cinc_omnibus_root] = "/tmp/test"
         install_opts[:root] = "/tmp/test"
-
-        Mixlib::Install::ScriptGenerator.expects(:new)
-          .with(default_version, false, install_opts).returns(installer)
-        cmd
-      end
-
-      it "will set the msi url" do
-        config[:install_msi_url] = "http://blah/blah.msi"
-        install_opts[:install_msi_url] = "http://blah/blah.msi"
 
         Mixlib::Install::ScriptGenerator.expects(:new)
           .with(default_version, false, install_opts).returns(installer)
@@ -362,7 +349,7 @@ describe Kitchen::Provisioner::CincBase do
         end
 
         it "will use driver.cache_directory even if other options are given" do
-          config[:chef_omnibus_install_options] = "-P cool -v 123"
+          config[:cinc_omnibus_install_options] = "-P cool -v 123"
           install_opts[:install_flags] = "-P cool -v 123 -d /tmp/custom/place"
           install_opts[:project] = "cool"
 
@@ -372,7 +359,7 @@ describe Kitchen::Provisioner::CincBase do
         end
 
         it "will not use driver.cache_directory if -d options is given" do
-          config[:chef_omnibus_install_options] = "-P cool -d /path -v 123"
+          config[:cinc_omnibus_install_options] = "-P cool -d /path -v 123"
           install_opts[:install_flags] = "-P cool -d /path -v 123"
           install_opts[:project] = "cool"
 
@@ -622,7 +609,7 @@ describe Kitchen::Provisioner::CincBase do
         before { driver.stubs(:cache_directory).returns('$env:TEMP\\dummy\\place') }
 
         it "will have the same behavior on windows" do
-          config[:chef_omnibus_install_options] = "-version 123"
+          config[:cinc_omnibus_install_options] = "-version 123"
           install_opts_clone = install_opts.clone
           install_opts_clone[:sudo_command] = ""
           install_opts_clone[:install_flags] = "-version 123"
@@ -795,24 +782,24 @@ describe Kitchen::Provisioner::CincBase do
   end
 
   describe "#product_version" do
-    describe "when require_chef_omnibus is true and product_version is not set" do
+    describe "when require_cinc_omnibus is true and product_version is not set" do
       it "returns :latest" do
-        config[:require_chef_omnibus] = true
+        config[:require_cinc_omnibus] = true
         _(provisioner.product_version).must_equal :latest
       end
     end
 
-    describe "when require_chef_omnibus is false and product_version is nil" do
+    describe "when require_cinc_omnibus is false and product_version is nil" do
       it "returns nil" do
         config[:product_version] = nil
-        config[:require_chef_omnibus] = false
+        config[:require_cinc_omnibus] = false
         _(provisioner.product_version).must_be_nil
       end
     end
 
-    describe "when require_chef_omnibus is a string" do
-      it "returns the require_chef_omnibus string" do
-        config[:require_chef_omnibus] = "15.0.0"
+    describe "when require_cinc_omnibus is a string" do
+      it "returns the require_cinc_omnibus string" do
+        config[:require_cinc_omnibus] = "15.0.0"
         _(provisioner.product_version).must_match "15.0.0"
       end
     end

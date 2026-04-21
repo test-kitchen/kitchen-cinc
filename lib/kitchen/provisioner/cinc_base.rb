@@ -37,9 +37,9 @@ module Kitchen
     #
     # @author Cinc Project
     class CincBase < Base
-      default_config :require_chef_omnibus, true
-      default_config :chef_omnibus_url, "https://omnitruck.cinc.sh/install.sh"
-      default_config :chef_omnibus_install_options, nil
+      default_config :require_cinc_omnibus, true
+      default_config :cinc_omnibus_url, "https://omnitruck.cinc.sh/install.sh"
+      default_config :cinc_omnibus_install_options, nil
       default_config :run_list, []
       default_config :policy_group, nil
       default_config :attributes, {}
@@ -135,85 +135,6 @@ module Kitchen
 
       default_config :checksum
 
-      deprecate_config_for :require_chef_omnibus do |provisioner|
-        case
-        when provisioner[:require_chef_omnibus] == false
-          Util.outdent!(<<-MSG)
-            The 'require_chef_omnibus' attribute with value of 'false' will
-            change to use the new 'install_strategy' attribute with a value of 'skip'.
-
-            Note: 'product_name' must be set in order to use 'install_strategy'.
-
-            # New Usage #
-            provisioner:
-              product_name: <cinc or cinc-workstation>
-              install_strategy: skip
-          MSG
-        when provisioner[:require_chef_omnibus].to_s.match?(/\d/)
-          Util.outdent!(<<-MSG)
-            The 'require_chef_omnibus' attribute with version values will change
-            to use the new 'product_version' attribute.
-
-            Note: 'product_name' must be set in order to use 'product_version'.
-
-            # New Usage #
-            provisioner:
-              product_name: <cinc or cinc-workstation>
-              product_version: #{provisioner[:require_chef_omnibus]}
-          MSG
-        when provisioner[:require_chef_omnibus] == "latest"
-          Util.outdent!(<<-MSG)
-            The 'require_chef_omnibus' attribute with value of 'latest' will change
-            to use the new 'install_strategy' attribute with a value of 'always'.
-
-            Note: 'product_name' must be set in order to use 'install_strategy'.
-
-            # New Usage #
-            provisioner:
-              product_name: <cinc or cinc-workstation>
-              install_strategy: always
-          MSG
-        end
-      end
-
-      deprecate_config_for :chef_omnibus_url, Util.outdent!(<<-MSG)
-        Changing the 'chef_omnibus_url' attribute breaks existing functionality. It will
-        be removed in a future version.
-      MSG
-
-      deprecate_config_for :chef_omnibus_install_options, Util.outdent!(<<-MSG)
-        The 'chef_omnibus_install_options' attribute will be replaced by using
-        'product_name' and 'channel' attributes.
-
-        Note: 'product_name' must be set in order to use 'channel'.
-
-        # Deprecated Example #
-        provisioner:
-          chef_omnibus_install_options: -P cinc-workstation -c current
-
-        # New Usage #
-        provisioner:
-          product_name: cinc-workstation
-          channel: current
-      MSG
-
-      deprecate_config_for :install_msi_url, Util.outdent!(<<-MSG)
-        The 'install_msi_url' will be replaced by the 'download_url' attribute.
-        'download_url' will be applied to Bourne and PowerShell download scripts.
-
-        Note: 'product_name' must be set in order to use 'download_url'.
-
-        # New Usage #
-        provisioner:
-          product_name: <cinc or cinc-workstation>
-          download_url: http://direct-download-url
-      MSG
-
-      deprecate_config_for :chef_metadata_url, Util.outdent!(<<-MSG)
-        The 'chef_metadata_url' will be removed. The Windows metadata URL will be
-        fully managed by using attribute settings.
-      MSG
-
       # Reads the local Chef::Config object (if present). We do this because
       # we want to start bringing Cinc config and Cinc Workstation config closer
       # together. For example, we want to configure proxy settings in 1
@@ -231,27 +152,20 @@ module Kitchen
         ChefConfig::Config.export_proxies if defined?(ChefConfig::Config.export_proxies)
       end
 
-      def doctor(state)
-        deprecated_config = instance.driver.instance_variable_get(:@deprecated_config)
-        deprecated_config.each do |attr, msg|
-          info("**** #{attr} deprecated\n#{msg}")
-        end
-      end
-
-      # gives us the product version from either require_chef_omnibus or product_version
-      # If the non-default (true) value of require_chef_omnibus is present use that
+      # gives us the product version from either require_cinc_omnibus or product_version
+      # If the non-default (true) value of require_cinc_omnibus is present use that
       # otherwise use config[:product_version] which defaults to :latest and is the actual
       # default for cinc provisioners
       #
       # @return [String,Symbol,NilClass] version or nil if not applicable
       def product_version
-        case config[:require_chef_omnibus]
+        case config[:require_cinc_omnibus]
         when FalseClass
           nil
         when TrueClass
           config[:product_version]
         else
-          config[:require_chef_omnibus]
+          config[:require_cinc_omnibus]
         end
       end
 
@@ -280,7 +194,7 @@ module Kitchen
 
       # (see Base#install_command)
       def install_command
-        return unless config[:require_chef_omnibus] || config[:product_name]
+        return unless config[:require_cinc_omnibus] || config[:product_name]
         return if config[:product_name] && config[:install_strategy] == "skip"
 
         prefix_command(install_script_contents)
@@ -296,15 +210,15 @@ module Kitchen
       # @api private
       def install_options
         add_omnibus_directory_option if instance.driver.cache_directory
-        project = /\s*-P (\w+)\s*/.match(config[:chef_omnibus_install_options])
+        project = /\s*-P (\w+)\s*/.match(config[:cinc_omnibus_install_options])
         {
-          omnibus_url: config[:chef_omnibus_url],
+          omnibus_url: config[:cinc_omnibus_url],
           project: project.nil? ? nil : project[1],
-          install_flags: config[:chef_omnibus_install_options],
+          install_flags: config[:cinc_omnibus_install_options],
           sudo_command:,
         }.tap do |opts|
-          opts[:root] = config[:chef_omnibus_root] if config.key? :chef_omnibus_root
-          %i{install_msi_url http_proxy https_proxy}.each do |key|
+          opts[:root] = config[:cinc_omnibus_root] if config.key? :cinc_omnibus_root
+          %i{http_proxy https_proxy}.each do |key|
             opts[key] = config[key] if config.key? key
           end
         end
@@ -316,10 +230,10 @@ module Kitchen
       # @api private
       def add_omnibus_directory_option
         cache_dir_option = "#{omnibus_dir_option} #{instance.driver.cache_directory}"
-        if config[:chef_omnibus_install_options].nil?
-          config[:chef_omnibus_install_options] = cache_dir_option
-        elsif config[:chef_omnibus_install_options].match(/\s*#{omnibus_dir_option}\s*/).nil?
-          config[:chef_omnibus_install_options] << " " << cache_dir_option
+        if config[:cinc_omnibus_install_options].nil?
+          config[:cinc_omnibus_install_options] = cache_dir_option
+        elsif config[:cinc_omnibus_install_options].match(/\s*#{omnibus_dir_option}\s*/).nil?
+          config[:cinc_omnibus_install_options] << " " << cache_dir_option
         end
       end
 
@@ -444,11 +358,11 @@ module Kitchen
       # @return [String] contents of the install script
       # @api private
       def install_script_contents
-        # by default require_chef_omnibus is set to true. Check config[:product_name] first
+        # by default require_cinc_omnibus is set to true. Check config[:product_name] first
         # so that we can use it if configured.
         if config[:product_name]
           script_for_product
-        elsif config[:require_chef_omnibus]
+        elsif config[:require_cinc_omnibus]
           script_for_omnibus_version
         end
       end
@@ -496,7 +410,7 @@ module Kitchen
           end
           opts[:install_command_options].merge!(proxies)
         end)
-        config[:chef_omnibus_root] = installer.root
+        config[:cinc_omnibus_root] = installer.root
         if powershell_shell?
           installer.install_command
         else
@@ -532,9 +446,9 @@ module Kitchen
       def script_for_omnibus_version
         require "mixlib/install/script_generator"
         installer = Mixlib::Install::ScriptGenerator.new(
-          config[:require_chef_omnibus], powershell_shell?, install_options
+          config[:require_cinc_omnibus], powershell_shell?, install_options
         )
-        config[:chef_omnibus_root] = installer.root
+        config[:cinc_omnibus_root] = installer.root
         sudo(installer.install_command)
       end
 

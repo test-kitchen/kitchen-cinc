@@ -32,15 +32,15 @@ module Kitchen
 
       default_config :solo_rb, {}
 
-      default_config :chef_solo_path do |provisioner|
+      default_config :cinc_solo_path do |provisioner|
         provisioner
-          .remote_path_join(%W{#{provisioner[:chef_omnibus_root]} bin cinc-solo})
+          .remote_path_join(%W{#{provisioner[:cinc_omnibus_root]} bin cinc-solo})
           .tap { |path| path.concat(".bat") if provisioner.windows_os? }
       end
 
       default_config :ruby_bindir do |provisioner|
         provisioner
-          .remote_path_join(%W{#{provisioner[:chef_omnibus_root]} embedded bin})
+          .remote_path_join(%W{#{provisioner[:cinc_omnibus_root]} embedded bin})
       end
 
       # (see Base#config_filename)
@@ -56,7 +56,7 @@ module Kitchen
 
       # (see Base#run_command)
       def run_command
-        cmd = sudo(config[:chef_solo_path]).dup
+        cmd = sudo(config[:cinc_solo_path]).dup
           .tap { |str| str.insert(0, "& ") if powershell_shell? }
 
         chef_cmd(cmd)
