@@ -132,6 +132,26 @@ module Kitchen
 
       default_config :checksum
 
+      # Mapping of deprecated chef_*-prefixed config keys to their cinc_*
+      # equivalents. Lets existing kitchen.yml files using the chef_* names
+      # keep working when migrating from kitchen-omnibus-chef to kitchen-cinc.
+      CHEF_TO_CINC_KEYS = {
+        require_chef_omnibus: :require_cinc_omnibus,
+        chef_omnibus_url: :cinc_omnibus_url,
+        chef_omnibus_install_options: :cinc_omnibus_install_options,
+        chef_omnibus_root: :cinc_omnibus_root,
+        chef_client_path: :cinc_client_path,
+        chef_solo_path: :cinc_solo_path,
+        chef_apply_path: :cinc_apply_path,
+        chef_zero_host: :cinc_zero_host,
+        chef_zero_port: :cinc_zero_port,
+      }.freeze
+
+      CHEF_TO_CINC_KEYS.each do |chef_key, cinc_key|
+        deprecate_config_for chef_key,
+          "The '#{chef_key}' attribute is deprecated; use '#{cinc_key}' instead."
+      end
+
       # Reads the local Chef::Config object (if present). We do this because
       # we want to start bringing Cinc config and Cinc Workstation config closer
       # together. For example, we want to configure proxy settings in 1
@@ -139,6 +159,17 @@ module Kitchen
       #
       # @param config [Hash] initial provided configuration
       def initialize(config = {})
+        # Forward any chef_*-prefixed keys to their cinc_* equivalents so that
+        # the cinc_* default_config blocks see them as already-set and skip
+        # their default values. The chef_* key is preserved so that
+        # deprecate_config_for can emit a warning via `kitchen doctor`.
+        CHEF_TO_CINC_KEYS.each do |chef_key, cinc_key|
+          next unless config.key?(chef_key)
+          next if config.key?(cinc_key)
+
+          config[cinc_key] = config[chef_key]
+        end
+
         super(config)
 
         if defined?(ChefConfig::WorkstationConfigLoader)

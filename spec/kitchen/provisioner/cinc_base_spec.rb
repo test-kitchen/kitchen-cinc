@@ -141,6 +141,25 @@ describe Kitchen::Provisioner::CincBase do
     end
   end
 
+  describe "deprecated chef_* config-key forwarding" do
+    Kitchen::Provisioner::CincBase::CHEF_TO_CINC_KEYS.each do |chef_key, cinc_key|
+      it "forwards #{chef_key} to #{cinc_key} when only the chef_* key is set" do
+        config[chef_key] = "value-from-chef-key"
+        _(provisioner[cinc_key]).must_equal "value-from-chef-key"
+      end
+
+      it "prefers #{cinc_key} when both #{chef_key} and #{cinc_key} are set" do
+        config[chef_key] = "old-chef-value"
+        config[cinc_key] = "new-cinc-value"
+        _(provisioner[cinc_key]).must_equal "new-cinc-value"
+      end
+
+      it "registers #{chef_key} as a deprecated attribute" do
+        _(Kitchen::Provisioner::CincBase.deprecated_attributes).must_include chef_key
+      end
+    end
+  end
+
   describe "#install_command" do
     before do
       platform.stubs(:shell_type).returns("bourne")

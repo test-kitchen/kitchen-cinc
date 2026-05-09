@@ -40,6 +40,23 @@ This gem provides five provisioners:
 - **`cinc_apply`** — Cinc Apply provisioner for running individual recipes
 - **`cinc_target`** — Cinc Target Mode provisioner (requires Cinc 19.0.0+, Train-based transport)
 
+### kitchen-omnibus-chef compatibility
+
+To ease migration from `kitchen-omnibus-chef`, every provisioner above is also
+registered under its `chef_*` name: `chef_infra`, `chef_solo`, `chef_apply`,
+`chef_target`, and `chef_zero`. An existing `kitchen.yml` using
+`provisioner: name: chef_infra` will work without modification — it transparently
+runs the Cinc Client equivalent.
+
+When both `kitchen-cinc` and `kitchen-omnibus-chef` are installed, the `chef_*`
+names resolve to the kitchen-cinc implementation; this is coordinated via the
+factory pattern in kitchen-omnibus-chef's `Kitchen::Provisioner::ChefInfra.new`.
+
+The deprecated `chef_*`-prefixed configuration keys (`chef_client_path`,
+`chef_omnibus_root`, `chef_zero_host`, etc.) are still accepted and forwarded
+to their `cinc_*` equivalents. Run `kitchen doctor` to see which deprecated
+keys are in use.
+
 ### Basic Configuration
 
 To use the Cinc Infra provisioner in your `kitchen.yml`:
