@@ -14,21 +14,24 @@
 # limitations under the License.
 
 require_relative "cinc_solo"
+require_relative "chef_alias_loader"
 
-# See chef_infra.rb for the rationale on this remove_const guard.
-if Kitchen::Provisioner.const_defined?(:ChefSolo, false) &&
-    !(Kitchen::Provisioner::ChefSolo <= Kitchen::Provisioner::CincSolo)
-  Kitchen::Provisioner.send(:remove_const, :ChefSolo)
-end
+# See chef_infra.rb for the priority and remove_const rationale.
+unless Kitchen::Provisioner::ChefAliasLoader.defer_to_enterprise(:ChefSolo)
+  if Kitchen::Provisioner.const_defined?(:ChefSolo, false) &&
+      !(Kitchen::Provisioner::ChefSolo <= Kitchen::Provisioner::CincSolo)
+    Kitchen::Provisioner.send(:remove_const, :ChefSolo)
+  end
 
-module Kitchen
-  module Provisioner
-    # Alias for CincSolo. Lets existing kitchen.yml files using
-    # `provisioner: name: chef_solo` transparently use Cinc Solo.
-    class ChefSolo < CincSolo
-      kitchen_provisioner_api_version 2
+  module Kitchen
+    module Provisioner
+      # Alias for CincSolo. Lets existing kitchen.yml files using
+      # `provisioner: name: chef_solo` transparently use Cinc Solo.
+      class ChefSolo < CincSolo
+        kitchen_provisioner_api_version 2
 
-      plugin_version Kitchen::VERSION
+        plugin_version Kitchen::VERSION
+      end
     end
   end
 end

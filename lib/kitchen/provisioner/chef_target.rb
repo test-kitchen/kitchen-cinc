@@ -14,21 +14,24 @@
 # limitations under the License.
 
 require_relative "cinc_target"
+require_relative "chef_alias_loader"
 
-# See chef_infra.rb for the rationale on this remove_const guard.
-if Kitchen::Provisioner.const_defined?(:ChefTarget, false) &&
-    !(Kitchen::Provisioner::ChefTarget <= Kitchen::Provisioner::CincTarget)
-  Kitchen::Provisioner.send(:remove_const, :ChefTarget)
-end
+# See chef_infra.rb for the priority and remove_const rationale.
+unless Kitchen::Provisioner::ChefAliasLoader.defer_to_enterprise(:ChefTarget)
+  if Kitchen::Provisioner.const_defined?(:ChefTarget, false) &&
+      !(Kitchen::Provisioner::ChefTarget <= Kitchen::Provisioner::CincTarget)
+    Kitchen::Provisioner.send(:remove_const, :ChefTarget)
+  end
 
-module Kitchen
-  module Provisioner
-    # Alias for CincTarget. Lets existing kitchen.yml files using
-    # `provisioner: name: chef_target` transparently use Cinc Target Mode.
-    class ChefTarget < CincTarget
-      kitchen_provisioner_api_version 2
+  module Kitchen
+    module Provisioner
+      # Alias for CincTarget. Lets existing kitchen.yml files using
+      # `provisioner: name: chef_target` transparently use Cinc Target Mode.
+      class ChefTarget < CincTarget
+        kitchen_provisioner_api_version 2
 
-      plugin_version Kitchen::VERSION
+        plugin_version Kitchen::VERSION
+      end
     end
   end
 end

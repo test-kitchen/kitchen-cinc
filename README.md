@@ -48,13 +48,21 @@ registered under its `chef_*` name: `chef_infra`, `chef_solo`, `chef_apply`,
 `provisioner: name: chef_infra` will work without modification — it transparently
 runs the Cinc Client equivalent.
 
-When both `kitchen-cinc` and `kitchen-omnibus-chef` (>= 1.1.0) are installed,
-the `chef_*` names resolve to the kitchen-cinc implementation. This is by
-design: kitchen-omnibus-chef's factory treats kitchen-cinc as a
-higher-priority implementation, so installing kitchen-cinc is treated as
-opting into the Cinc Client. (Cinc Client is the community distribution of
-Chef Infra Client — same upstream source, different build.) If you don't
-want this delegation, remove `kitchen-cinc` from your Gemfile.
+The `chef_*` names follow this priority order across kitchen-* gems:
+**kitchen-chef-enterprise > kitchen-cinc > kitchen-omnibus-chef**. When a
+higher-priority gem is installed, kitchen-cinc yields to it. Users who
+explicitly want the Cinc Client implementation should use the `cinc_*`
+names in `kitchen.yml`.
+
+So with `chef_infra` in your `kitchen.yml`:
+
+- only kitchen-cinc installed → Cinc Client
+- kitchen-cinc + kitchen-omnibus-chef (>= 1.1.0) → Cinc Client
+- kitchen-cinc + kitchen-chef-enterprise → Chef Enterprise
+- all three installed → Chef Enterprise
+
+(Cinc Client is the community distribution of Chef Infra Client — same
+upstream source, different build.)
 
 The deprecated `chef_*`-prefixed configuration keys (`chef_client_path`,
 `chef_omnibus_root`, `chef_zero_host`, etc.) are still accepted and forwarded

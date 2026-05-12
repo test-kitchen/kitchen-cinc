@@ -14,23 +14,26 @@
 # limitations under the License.
 
 require_relative "cinc_infra"
+require_relative "chef_alias_loader"
 
 # Deprecated alias for ChefInfra (which itself is an alias for CincInfra).
 # Provided for backward compatibility with kitchen.yml files using the
 # legacy chef_zero provisioner name.
 #
-# See chef_infra.rb for the rationale on this remove_const guard.
-if Kitchen::Provisioner.const_defined?(:ChefZero, false) &&
-    !(Kitchen::Provisioner::ChefZero <= Kitchen::Provisioner::CincInfra)
-  Kitchen::Provisioner.send(:remove_const, :ChefZero)
-end
+# See chef_infra.rb for the priority and remove_const rationale.
+unless Kitchen::Provisioner::ChefAliasLoader.defer_to_enterprise(:ChefZero)
+  if Kitchen::Provisioner.const_defined?(:ChefZero, false) &&
+      !(Kitchen::Provisioner::ChefZero <= Kitchen::Provisioner::CincInfra)
+    Kitchen::Provisioner.send(:remove_const, :ChefZero)
+  end
 
-module Kitchen
-  module Provisioner
-    class ChefZero < CincInfra
-      kitchen_provisioner_api_version 2
+  module Kitchen
+    module Provisioner
+      class ChefZero < CincInfra
+        kitchen_provisioner_api_version 2
 
-      plugin_version Kitchen::VERSION
+        plugin_version Kitchen::VERSION
+      end
     end
   end
 end
