@@ -14,21 +14,24 @@
 # limitations under the License.
 
 require_relative "cinc_apply"
+require_relative "chef_alias_loader"
 
-# See chef_infra.rb for the rationale on this remove_const guard.
-if Kitchen::Provisioner.const_defined?(:ChefApply, false) &&
-    !(Kitchen::Provisioner::ChefApply <= Kitchen::Provisioner::CincApply)
-  Kitchen::Provisioner.send(:remove_const, :ChefApply)
-end
+# See chef_infra.rb for the priority and remove_const rationale.
+unless Kitchen::Provisioner::ChefAliasLoader.defer_to_enterprise(:ChefApply)
+  if Kitchen::Provisioner.const_defined?(:ChefApply, false) &&
+      !(Kitchen::Provisioner::ChefApply <= Kitchen::Provisioner::CincApply)
+    Kitchen::Provisioner.send(:remove_const, :ChefApply)
+  end
 
-module Kitchen
-  module Provisioner
-    # Alias for CincApply. Lets existing kitchen.yml files using
-    # `provisioner: name: chef_apply` transparently use Cinc Apply.
-    class ChefApply < CincApply
-      kitchen_provisioner_api_version 2
+  module Kitchen
+    module Provisioner
+      # Alias for CincApply. Lets existing kitchen.yml files using
+      # `provisioner: name: chef_apply` transparently use Cinc Apply.
+      class ChefApply < CincApply
+        kitchen_provisioner_api_version 2
 
-      plugin_version Kitchen::VERSION
+        plugin_version Kitchen::VERSION
+      end
     end
   end
 end
