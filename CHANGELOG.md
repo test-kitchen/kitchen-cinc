@@ -1,5 +1,13 @@
 # Kitchen-cinc Change Log
 
+## [1.1.0](https://github.com/test-kitchen/kitchen-cinc/compare/v1.0.0...v1.1.0) (2026-05-19)
+
+
+### Features
+
+* **provisioner:** add chef_* aliases for kitchen-omnibus-chef compatibility ([8a85364](https://github.com/test-kitchen/kitchen-cinc/commit/8a853649bb59315eb3e6cb33ebf40700ab3e7994))
+* **provisioner:** defer chef_* aliases to kitchen-chef-enterprise when installed ([d2adb44](https://github.com/test-kitchen/kitchen-cinc/commit/d2adb44557939ea7e5d42c964892548b77e724a8))
+
 ## [1.0.0](https://github.com/test-kitchen/kitchen-cinc/compare/v0.1.0...v1.0.0) (2026-04-24)
 
 
