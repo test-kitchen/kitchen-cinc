@@ -151,26 +151,11 @@ Every option exposed by the provisioners is documented under
 - [Target mode](docs/target-mode.md) — extra requirements and option
   overrides for `cinc_target`.
 
-## Development
+## Contributing
 
-### Running Tests
-
-```shell
-bundle install
-bundle exec rake          # Run all tests and linting
-bundle exec rake spec     # Run unit tests only
-bundle exec rake lint     # Run Cookstyle linting only
-```
-
-### Integration Tests
-
-```shell
-# Vagrant
-KITCHEN_YAML=kitchen.yml bundle exec kitchen test
-
-# Docker (Dokken)
-KITCHEN_YAML=kitchen.dokken.yml bundle exec kitchen test
-```
+Bug reports and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md)
+for development setup, how to run the unit and integration tests, and the
+release process.
 
 ## License
 

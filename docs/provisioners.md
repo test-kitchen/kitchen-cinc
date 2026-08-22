@@ -70,6 +70,13 @@ Adds the following provisioner-specific options:
 `cinc_solo` does **not** support Policyfiles. Use Berkshelf or a
 pre-resolved cookbook directory.
 
+### `legacy_mode`
+
+- **Type:** `Boolean`
+- **Default:** `false`
+- **Description:** Passes `--legacy-mode` to `cinc-solo`, running it as a true
+  Cinc Solo run rather than the local-mode shim. Only applies to `cinc_solo`.
+
 ## `cinc_apply`
 
 Runs each recipe in the suite's `run_list` through `cinc-apply` against

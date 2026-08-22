@@ -35,6 +35,42 @@ following defaults overridden:
 - **Default:** `true`
 - Whether to prefix the local `cinc-client` invocation with `sudo`.
 
+## Transferring files
+
+Because `cinc_target` runs the converge from the workstation rather than on the
+instance, it can move files in both directions around the run.
+
+### `uploads`
+
+- **Type:** `Hash`
+- **Default:** `{}`
+- **Description:** Files copied from the workstation to the instance **before**
+  the converge. Each key is a local path, or an array of local paths, and each
+  value is the remote destination.
+
+```yaml
+provisioner:
+  name: cinc_target
+  uploads:
+    /local/path/certificate.pem: /etc/ssl/certificate.pem
+```
+
+### `downloads`
+
+- **Type:** `Hash`
+- **Default:** `{}`
+- **Description:** Files copied from the instance back to the workstation
+  **after** the converge. Each key is a remote path, or an array of remote
+  paths, and each value is the local destination. Useful for retrieving reports
+  or logs produced by the run.
+
+```yaml
+provisioner:
+  name: cinc_target
+  downloads:
+    /var/log/cinc/client.log: ./tmp/client.log
+```
+
 ## Options that are intentionally no-ops
 
 The following hooks are stubbed out for `cinc_target` because the
