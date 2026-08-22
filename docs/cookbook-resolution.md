@@ -47,6 +47,14 @@ Berkshelf or no resolution.
   `kitchen_root`. If set but the file does not exist, kitchen raises a
   `UserError`.
 
+### `berksfile`
+
+- **Type:** `String`
+- **Default:** `none`
+- **Description:** Alternate spelling of `berksfile_path`, accepted for
+  compatibility. `berksfile_path` takes precedence when both are set; if
+  neither is set, `Berksfile` is used.
+
 ## Shared options
 
 ### `always_update_cookbooks`

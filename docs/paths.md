@@ -23,6 +23,16 @@ auto-resolve to subdirectories under `kitchen_root` if unset.
 If a path is set explicitly, the provisioner expands it relative to
 `kitchen_root`.
 
+### `root_path`
+
+- **Type:** `String`
+- **Default:** `auto`
+- **Description:** Directory on the test instance that the sandbox is copied
+  into, and the root that every other on-instance path is joined against.
+  Defaults to the driver's sandbox location. Under `cinc_target` this is
+  redirected to the local sandbox path, because the converge runs from the
+  workstation rather than on the instance.
+
 ## On-instance binary paths
 
 These options point at executables on the test instance. The defaults
