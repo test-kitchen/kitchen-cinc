@@ -1,5 +1,7 @@
 # kitchen-cinc
 
+[![Gem Version](https://badge.fury.io/rb/kitchen-cinc.svg)](https://badge.fury.io/rb/kitchen-cinc)
+
 A Test Kitchen provisioner for [Cinc Client](https://cinc.sh/) (the community distribution of Chef Infra Client) that downloads and installs omnibus packages via the [Cinc omnitruck API](https://omnitruck.cinc.sh/).
 
 ## Overview
