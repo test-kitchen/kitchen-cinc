@@ -135,7 +135,7 @@ module Kitchen
         # Ruby CLI shipped in the `cinc-cli` gem.
         #
         # @api private
-        # @returns [String]
+        # @return [String]
         def cli_path
           @cli_path ||= which("cinc-cli") || which("cinc") || which("chef-cli") || which("chef") || no_cli_found_error
         end
