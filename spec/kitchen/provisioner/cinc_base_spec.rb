@@ -1285,13 +1285,13 @@ describe Kitchen::Provisioner::CincBase do
           config[:generic_rb] = {
             node_name: "eagles",
             user_path: "/a/b/c/u",
-            chef_server_url: "https://whereever.io",
+            chef_server_url: "https://wherever.io",
           }
           provisioner.create_sandbox
 
           _(file).must_include %{node_name "eagles"}
           _(file).must_include %{user_path "/a/b/c/u"}
-          _(file).must_include %{chef_server_url "https://whereever.io"}
+          _(file).must_include %{chef_server_url "https://wherever.io"}
         end
 
         it " supports adding new configuration" do
