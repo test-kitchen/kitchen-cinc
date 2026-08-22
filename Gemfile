@@ -1,7 +1,6 @@
 source "https://rubygems.org"
 
-gemspec
-
+gemspec development_group: :test
 gem "mixlib-install", ">= 3.14", source: "https://rubygems.cinc.sh"
 gem "chef-cli", ">= 5.3.1", source: "https://rubygems.cinc.sh"
 gem "chef", ">= 19.0", source: "https://rubygems.cinc.sh"
