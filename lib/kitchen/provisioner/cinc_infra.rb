@@ -43,13 +43,18 @@ module Kitchen
           .remote_path_join(%W{#{provisioner[:cinc_omnibus_root]} embedded bin})
       end
 
-      # (see Base#create_sandbox)
+      # Builds the sandbox and writes the validation key and client config.
+      #
+      # @return [void]
       def create_sandbox
         super
         prepare_validation_pem
         prepare_config_rb
       end
 
+      # Shell code that runs cinc-client in local mode.
+      #
+      # @return [String] platform-appropriate shell code
       def run_command
         cmd = "#{sudo(config[:cinc_client_path])} --local-mode".tap { |str| str.insert(0, "& ") if powershell_shell? }
 

@@ -43,18 +43,22 @@ module Kitchen
           .remote_path_join(%W{#{provisioner[:cinc_omnibus_root]} embedded bin})
       end
 
-      # (see Base#config_filename)
+      # @return [String] the config file cinc-solo reads, +solo.rb+
       def config_filename
         "solo.rb"
       end
 
-      # (see Base#create_sandbox)
+      # Builds the sandbox and writes +solo.rb+ into it.
+      #
+      # @return [void]
       def create_sandbox
         super
         prepare_config_rb
       end
 
-      # (see Base#run_command)
+      # Shell code that runs cinc-solo.
+      #
+      # @return [String] platform-appropriate shell code
       def run_command
         cmd = sudo(config[:cinc_solo_path]).dup
           .tap { |str| str.insert(0, "& ") if powershell_shell? }

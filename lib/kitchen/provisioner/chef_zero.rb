@@ -29,6 +29,10 @@ unless Kitchen::Provisioner::ChefAliasLoader.defer_to_enterprise(:ChefZero)
 
   module Kitchen
     module Provisioner
+      # Deprecated alias for {CincInfra}, kept so existing kitchen.yml files
+      # naming the +chef_zero+ provisioner keep working.
+      #
+      # Prefer +cinc_infra+ in new configuration.
       class ChefZero < CincInfra
         kitchen_provisioner_api_version 2
 

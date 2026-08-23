@@ -9,3 +9,5 @@ Gemfile.lock
 .kitchen/
 .kitchen.local.yml
 Policyfile.lock.json
+doc/
+.yardoc

@@ -282,6 +282,12 @@ module Kitchen
           end
         end
 
+        # Compiles the Policyfile and records its identity in the node JSON.
+        #
+        # Compilation is wrapped in Test Kitchen's global mutex because concurrent
+        # instances would otherwise compile into the same lockfile at once.
+        #
+        # @return [Hash] node attributes including +policy_name+ and +policy_group+
         def update_dna_for_policyfile
           policy = Cinc::Policyfile.new(
             policyfile, sandbox_path,
