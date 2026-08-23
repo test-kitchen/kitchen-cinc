@@ -1,0 +1,11 @@
+--markup markdown
+--output-dir doc
+--readme README.md
+--title "kitchen-cinc"
+--protected
+--private
+lib/**/*.rb
+-
+CHANGELOG.md
+CONTRIBUTING.md
+LICENSE

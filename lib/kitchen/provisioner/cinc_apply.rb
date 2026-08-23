@@ -71,7 +71,13 @@ module Kitchen
       end
       expand_path_for :apply_path
 
-      # (see CincBase#create_sandbox)
+      # Builds a sandbox containing just the recipes to apply.
+      #
+      # Unlike the other provisioners this does not stage cookbooks, data bags,
+      # or roles -- cinc-apply runs single recipes, so only the node JSON and the
+      # apply directory are needed.
+      #
+      # @return [void]
       def create_sandbox
         @sandbox_path = Dir.mktmpdir("#{instance.name}-sandbox-")
         File.chmod(0755, sandbox_path)
@@ -82,7 +88,9 @@ module Kitchen
         prepare(:apply)
       end
 
-      # (see CincBase#init_command)
+      # Shell code that prepares the apply directory on the instance.
+      #
+      # @return [String] platform-appropriate shell code
       def init_command
         dirs = %w{
           apply
@@ -97,7 +105,9 @@ module Kitchen
         prefix_command(shell_code_from_file(vars, "cinc_base_init_command"))
       end
 
-      # (see CincSolo#run_command)
+      # Shell code that runs cinc-apply once per recipe in the run list.
+      #
+      # @return [String] platform-appropriate shell code
       def run_command
         level = config[:log_level]
         lines = []

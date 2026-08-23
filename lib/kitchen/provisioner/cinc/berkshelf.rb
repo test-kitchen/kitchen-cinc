@@ -19,6 +19,7 @@ require "kitchen/logging"
 
 module Kitchen
   module Provisioner
+    # Support classes shared by the cinc_* provisioners.
     module Cinc
       # Cinc cookbook resolver that uses Berkshelf and a Berksfile to calculate
       # dependencies.

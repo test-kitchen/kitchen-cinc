@@ -48,6 +48,9 @@ module Kitchen
         Kitchen::Provisioner.const_defined?(const_name, false)
       end
 
+      # Looks up the kitchen-chef-enterprise gem, if it is installed.
+      #
+      # @return [Gem::Specification, nil] nil when the gem is absent
       def enterprise_spec
         Gem::Specification.find_by_name("kitchen-chef-enterprise")
       rescue Gem::LoadError
