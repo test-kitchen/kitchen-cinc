@@ -67,6 +67,7 @@ module Kitchen
       # configuration data. Note that this method mutates the incoming Array.
       #
       # @param args [Array<String>] array of flags
+      # @return [void] +args+ is modified in place
       # @api private
       def add_optional_chef_client_args!(args)
         if config[:json_attributes]
@@ -99,6 +100,8 @@ module Kitchen
 
       # Returns an Array of command line arguments for the cinc client.
       #
+      # @param client_rb_filename [String] basename of the client.rb the
+      #   client should read out of +root_path+
       # @return [Array<String>] an array of command line arguments
       # @api private
       def chef_args(client_rb_filename)
@@ -134,6 +137,7 @@ module Kitchen
 
       # Writes a fake (but valid) validation.pem into the sandbox directory.
       #
+      # @return [void]
       # @api private
       def prepare_validation_pem
         info("Preparing validation.pem")
