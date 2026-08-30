@@ -55,8 +55,8 @@ jobs:
         uses: DavidAnson/markdownlint-cli2-action@v24
         with:
           globs: |
-            *.md
-            !CHANGELOG.md
+            **/*.md
+            !**/CHANGELOG*.md
 
   markdown-link-check:
     runs-on: ubuntu-latest
