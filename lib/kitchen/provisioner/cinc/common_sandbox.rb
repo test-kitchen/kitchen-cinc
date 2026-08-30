@@ -32,7 +32,7 @@ module Kitchen
         #
         # @param config [Hash] configuration hash
         # @param sandbox_path [String] path to local sandbox directory
-        # @param instance [Instance] an instance
+        # @param instance [Kitchen::Instance] an instance
         def initialize(config, sandbox_path, instance)
           @config = config
           @sandbox_path = sandbox_path
@@ -40,6 +40,12 @@ module Kitchen
         end
 
         # Populate the sandbox.
+        #
+        # Writes the node JSON and the cache directory, resolves cookbooks, and
+        # then copies each optional component directory (data, data bags,
+        # environments, nodes, roles, clients) and the data bag secret file.
+        #
+        # @return [void]
         def populate
           prepare_json
           prepare_cache
@@ -64,7 +70,7 @@ module Kitchen
         # @api private
         attr_reader :config
 
-        # @return [Instance] an instance
+        # @return [Kitchen::Instance] an instance
         # @api private
         attr_reader :instance
 
@@ -111,6 +117,10 @@ module Kitchen
 
         # Copies a cookbooks/ directory into the sandbox path.
         #
+        # Also picks up site-cookbooks/ and the project itself when those are
+        # present.
+        #
+        # @return [void]
         # @api private
         def cp_cookbooks
           info("Preparing cookbooks from project directory")
@@ -125,6 +135,7 @@ module Kitchen
 
         # Copies a site-cookbooks/ directory into the sandbox path.
         #
+        # @return [void]
         # @api private
         def cp_site_cookbooks
           info("Preparing site-cookbooks from project directory")
@@ -137,6 +148,8 @@ module Kitchen
         # Copies the current project, assumed to be a cookbook into the
         # sandbox path.
         #
+        # @return [void]
+        # @raise [Kitchen::UserError] if metadata.rb does not declare a `name`
         # @api private
         def cp_this_cookbook
           info("Preparing current project directory as a cookbook")
@@ -154,8 +167,10 @@ module Kitchen
           FileUtils.cp_r(glob, cb_path)
         end
 
-        # Removes all non-cookbook files in the sandbox path.
+        # Removes all non-cookbook files in the sandbox path, then prunes any
+        # directories left empty by the removal.
         #
+        # @return [void]
         # @api private
         def filter_only_cookbook_files
           info("Removing non-cookbook files before transfer")
@@ -164,8 +179,8 @@ module Kitchen
             .reverse_each { |fn| FileUtils.rmdir(fn) if File.directory?(fn) && Dir.empty?(fn) }
         end
 
-        # @return [Logger] the instance's logger or Test Kitchen's common
-        #   logger otherwise
+        # @return [Kitchen::Logger] the instance's logger or Test Kitchen's
+        #   common logger otherwise
         # @api private
         def logger
           instance ? instance.logger : Kitchen.logger
@@ -173,6 +188,7 @@ module Kitchen
 
         # Creates a minimal, no-op cookbook in the sandbox path.
         #
+        # @return [void]
         # @api private
         def make_fake_cookbook
           info("Policyfile, Berksfile, cookbooks/, or metadata.rb not found " \
@@ -215,6 +231,8 @@ module Kitchen
         #   which to pull the source path (default: `"#{component}_path"`)
         # @option opts [String] :dest_name the destination file or directory
         #   basename in the sandbox path (default: `component.to_s`)
+        # @return [void] nothing is copied when the source path is not
+        #   configured
         # @api private
         def prepare(component, opts = {})
           opts = { type: :directory }.merge(opts)
@@ -239,6 +257,7 @@ module Kitchen
 
         # Prepares a cache directory for inclusion in the sandbox path.
         #
+        # @return [void]
         # @api private
         def prepare_cache
           FileUtils.mkdir_p(File.join(sandbox_path, "cache"))
@@ -246,6 +265,10 @@ module Kitchen
 
         # Prepares cookbooks for inclusion in the sandbox path.
         #
+        # The first of a Policyfile, a Berksfile, a cookbooks/ directory, or a
+        # metadata.rb wins; with none of them a no-op cookbook is generated.
+        #
+        # @return [void]
         # @api private
         def prepare_cookbooks
           if File.exist?(policyfile)
@@ -263,9 +286,12 @@ module Kitchen
           filter_only_cookbook_files
         end
 
-        # Prepares a JSON file, sometimes called a dna.json or
-        # first-boot.json, for inclusion in the sandbox path.
+        # Writes the node JSON, always named dna.json, into the sandbox path.
         #
+        # The suite `attributes` are merged with the run list, or with the
+        # policy name and group when a Policyfile is in use.
+        #
+        # @return [void]
         # @api private
         def prepare_json
           dna = if File.exist?(policyfile)
@@ -305,6 +331,7 @@ module Kitchen
 
         # Performs a Policyfile cookbook resolution inside a common mutex.
         #
+        # @return [void]
         # @api private
         def resolve_with_policyfile
           Kitchen.mutex.synchronize do
@@ -319,6 +346,7 @@ module Kitchen
 
         # Performs a Berkshelf cookbook resolution inside a common mutex.
         #
+        # @return [void]
         # @api private
         def resolve_with_berkshelf
           Kitchen.mutex.synchronize do
@@ -342,8 +370,9 @@ module Kitchen
           File.join(sandbox_path, "cookbooks")
         end
 
-        # @return [String] an absolute path to a site cookbooks directory in the
-        #   sandbox path
+        # @return [String] the same cookbooks/ directory in the sandbox path
+        #   that {#tmpbooks_dir} returns; site-cookbooks are flattened into it
+        #   rather than staged separately
         # @api private
         def tmpsitebooks_dir
           File.join(sandbox_path, "cookbooks")

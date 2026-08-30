@@ -35,6 +35,8 @@ module Kitchen
         #   cookbooks
         # @param logger [Kitchen::Logger] a logger to use for output, defaults
         #   to `Kitchen.logger`
+        # @param always_update [Boolean] when true, refresh the Berksfile.lock
+        #   before vendoring, so newer matching cookbook versions are picked up
         def initialize(berksfile, path, logger: Kitchen.logger, always_update: false)
           @berksfile  = berksfile
           @path       = path
@@ -46,12 +48,20 @@ module Kitchen
         #
         # @param logger [Kitchen::Logger] a logger to use for output, defaults
         #   to `Kitchen.logger`
+        # @return [void]
+        # @raise [Kitchen::UserError] if the `berkshelf` gem is missing or
+        #   cannot be activated
         def self.load!(logger: Kitchen.logger)
           load_berkshelf!(logger)
         end
 
         # Performs the cookbook resolution and vendors the resulting cookbooks
         # in the desired path.
+        #
+        # Berkshelf refuses to vendor into an existing directory, so the target
+        # path is removed first.
+        #
+        # @return [void]
         def resolve
           version = ::Berkshelf::VERSION
           info("Resolving cookbook dependencies with Berkshelf #{version}...")
@@ -90,7 +100,8 @@ module Kitchen
           # Load the Berkshelf-specific library code.
           #
           # @param logger [Kitchen::Logger] the logger to use
-          # @raise [UserError] if the library couldn't be loaded
+          # @return [void]
+          # @raise [Kitchen::UserError] if the library couldn't be loaded
           # @api private
           def load_berkshelf!(logger)
             first_load = require "berkshelf"

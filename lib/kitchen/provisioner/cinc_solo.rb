@@ -70,6 +70,8 @@ module Kitchen
 
       # Returns an Array of command line arguments for the cinc-solo client.
       #
+      # @param solo_rb_filename [String] basename of the solo.rb the client
+      #   should read out of +root_path+
       # @return [Array<String>] an array of command line arguments
       # @api private
       def chef_args(solo_rb_filename)
