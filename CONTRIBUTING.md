@@ -21,33 +21,54 @@ bundle install
 ## Running tests
 
 ```shell
-bundle exec rake          # Run all tests and linting
-bundle exec rake spec     # Run unit tests only
-bundle exec rake lint     # Run Cookstyle linting only
+bundle exec rake          # Unit tests and linting
+bundle exec rake test     # Unit tests only
+bundle exec rake style    # Cookstyle linting only
 ```
 
-Many style offenses can be corrected automatically:
+Cookstyle must be run with `--chefstyle`; a bare `cookstyle` run applies
+the cookbook cops to library code and reports a flood of offenses that do
+not apply here.
 
 ```shell
-bundle exec cookstyle -a
+bundle exec cookstyle --chefstyle       # what CI runs
+bundle exec cookstyle --chefstyle -a    # autocorrect what can be autocorrected
+```
+
+Documentation coverage is also checked with YARD:
+
+```shell
+bundle exec rake doc            # Generate HTML docs into doc/
+bundle exec rake doc_coverage   # List anything in lib/ still undocumented
 ```
 
 ## Integration tests
 
-The integration suites converge real instances, so they need either Vagrant or
-Docker available locally.
+There are two integration configurations:
+
+- `kitchen.yml` converges real Vagrant boxes (`ubuntu-24.04` and
+  `almalinux-9`) and needs Vagrant plus a hypervisor locally.
+- `kitchen.exec.yml` converges the machine you are sitting at, using the
+  `exec` driver and transport. This is what CI runs, on Ubuntu, macOS,
+  and Windows. It installs Cinc Client on that machine, so run it
+  somewhere disposable.
 
 ```shell
 # Vagrant
-KITCHEN_YAML=kitchen.yml bundle exec kitchen test
+bundle exec kitchen test
 
-# Docker (Dokken)
-KITCHEN_YAML=kitchen.dokken.yml bundle exec kitchen test
+# exec, against the local machine — this really does install Cinc
+KITCHEN_LOCAL_YAML=kitchen.exec.yml bundle exec kitchen test default-localhost
 ```
 
-Changes that affect more than one provisioner are worth running against both,
-since `cinc_target` in particular takes a very different path — it converges from
-the workstation rather than on the instance.
+Use `kitchen test` rather than `kitchen verify`: only `test` runs the
+full create/converge/verify/destroy cycle, and teardown is easy to break
+without noticing.
+
+Changes that affect more than one provisioner are worth running against
+both configurations, since `cinc_target` in particular takes a very
+different path — it converges from the workstation rather than on the
+instance.
 
 ## Documentation
 
@@ -72,17 +93,35 @@ its **Type**, its **Default** (`auto` for values derived at runtime, `none` for
 Please keep pull requests focused on a single change — it makes review much
 faster.
 
+## Commit messages
+
+This project releases through
+[release-please](https://github.com/googleapis/release-please), which
+derives the changelog and the next version number from commit subjects.
+Commits merged to `main` must follow
+[Conventional Commits](https://www.conventionalcommits.org/):
+
+| Prefix                                     | Effect                                 |
+|--------------------------------------------|----------------------------------------|
+| `fix:`                                     | Patch release, listed in the changelog |
+| `feat:`                                    | Minor release, listed in the changelog |
+| `feat!:` / `BREAKING CHANGE:`              | Major release                          |
+| `docs:` `test:` `ci:` `chore:` `refactor:` | No release on their own                |
+
+Getting the prefix wrong means the release is versioned wrong, so it is
+worth a moment's thought.
+
 ## Release process
 
-This release process applies to all Cinc Project Test Kitchen plugins, but each project may have additional requirements.
+Releases are automated. Nothing here needs to be done by hand:
 
-1. Perform a diff between main and the last released version. Determine whether included MRs justify a patch, minor or major version release.
-2. Check out the main branch of the project being prepared for release.
-3. Branch into a release-branch of the form `150_release_prep`.
-4. Modify the `cinc_version.rb` file to specify the version for releasing.
-5. Run `rake changelog` to regenerate the changelog.
-6. `git commit` the `cinc_version.rb` and `CHANGELOG.md` changes to the branch and setup an MR for them. Allow the MR to run any automated tests and review the CHANGELOG for accuracy.
-7. Merge the MR to main after review.
-8. Switch your local copy to the main branch and `git pull` to pull in the release preparation changes.
-9. Run `rake release` on the main branch.
-10. Modify the `cinc_version.rb` file and bump the patch or minor version, and commit/push.
+1. Merging a `fix:` or `feat:` commit to `main` makes release-please open
+   or update a release pull request that bumps
+   `lib/kitchen/provisioner/cinc_version.rb` and writes `CHANGELOG.md`.
+2. Review that pull request — mainly the changelog wording and the
+   version it chose — and merge it when the release is wanted.
+3. Merging it tags the release and publishes the gem to RubyGems and to
+   GitHub Packages via `.github/workflows/publish.yaml`.
+
+Never push to a `release-please--*` branch; release-please owns it and
+will overwrite anything added there.

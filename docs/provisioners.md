@@ -20,12 +20,13 @@ Adds the following provisioner-specific options on top of the base set:
 
 - `client_rb` — extra `client.rb` config merged into the rendered file.
   Hash, default `{}`.
-- `named_run_list` — selects a named run list from a Policyfile. Hash,
-  default `{}`.
-- `json_attributes` — when `true`, writes node attributes to a `dna.json`
-  file and passes `--json-attributes`. Boolean, default `true`.
+- `named_run_list` — names a run list from the Policyfile's
+  `named_run_lists`. String, default `{}` (behaves as unset).
+- `json_attributes` — when `true`, passes `--json-attributes` pointing at
+  the `dna.json` that is written to the sandbox regardless. Boolean,
+  default `true`.
 - `cinc_zero_host` — value passed to `--chef-zero-host`. String,
-  default `nil`.
+  default none.
 - `cinc_zero_port` — value passed to `--chef-zero-port`. Integer,
   default `8889`.
 - `cinc_client_path` — absolute path to the `cinc-client` binary on the
@@ -67,8 +68,10 @@ Adds the following provisioner-specific options:
 - `ruby_bindir` — directory containing the embedded Ruby. String,
   defaults to `<cinc_omnibus_root>/embedded/bin`.
 
-`cinc_solo` does **not** support Policyfiles. Use Berkshelf or a
-pre-resolved cookbook directory.
+`cinc_solo` does **not** support Policyfiles. If a `Policyfile.rb` is
+found, the run aborts with a `UserError` instead of falling back -- use
+Berkshelf or a pre-resolved cookbook directory, or switch to
+`cinc_infra`.
 
 ### `legacy_mode`
 
@@ -94,8 +97,9 @@ Adds the following provisioner-specific options:
   `<cinc_omnibus_root>/bin/cinc-apply` (with `.bat` on Windows).
 - `ruby_bindir` — directory containing the embedded Ruby. String,
   defaults to `<cinc_omnibus_root>/embedded/bin`.
-- `apply_path` — sandbox path under which `<recipe>.rb` files are
-  staged. String, auto-calculated from `kitchen_root` if unset.
+- `apply_path` — directory on the workstation holding the `<recipe>.rb`
+  files to stage. String, auto-detected under `test_base_path` if unset;
+  see [paths.md](paths.md).
 
 ## `cinc_target`
 

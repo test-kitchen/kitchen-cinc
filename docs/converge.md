@@ -17,15 +17,19 @@ called out where relevant.
 
 - **Type:** Hash
 - **Default:** `{}`
-- Node attributes to set during the converge. Merged into the JSON
-  attributes file or the `client.rb`/`solo.rb` config depending on
-  provisioner.
+- Node attributes to set during the converge. Always written to the
+  `dna.json` file in the sandbox, for every provisioner -- attributes
+  are never merged into `client.rb` or `solo.rb`. Use `client_rb` /
+  `solo_rb` for config file entries.
 
 ### `named_run_list` (`cinc_infra` / `cinc_zero` / `cinc_target`)
 
-- **Type:** Hash
-- **Default:** `{}`
-- Selects a named run list defined in a Policyfile.
+- **Type:** String
+- **Default:** `{}` (behaves as unset)
+- Name of a run list defined in the Policyfile's `named_run_lists`
+  block, written into the rendered `client.rb` as `named_run_list`. The
+  default is an empty Hash for historical reasons; it renders as a no-op
+  and Cinc uses the Policyfile's default run list.
 
 ### `policy_group`
 
@@ -38,8 +42,10 @@ called out where relevant.
 
 - **Type:** Boolean
 - **Default:** `true`
-- When `true`, the provisioner writes a `dna.json` file to the sandbox
-  and passes `--json-attributes` to `cinc-client`.
+- When `true`, `--json-attributes <root_path>/dna.json` is passed to
+  `cinc-client`. `dna.json` is written to the sandbox either way; this
+  option only controls whether Cinc is told to read it. `cinc_solo`
+  ignores this option and always passes `--json-attributes`.
 
 ## Logging
 
@@ -140,7 +146,7 @@ called out where relevant.
 ### `cinc_zero_host`
 
 - **Type:** String
-- **Default:** `nil`
+- **Default:** none
 - Value passed to `--chef-zero-host`. Leave unset for the Cinc default
   bind address.
 
