@@ -6,8 +6,17 @@ your test environment deviates from the conventional layout.
 ## Sandbox paths (workstation side)
 
 These options point at directories on the workstation that the
-provisioner will look at when staging the sandbox. All of them
-auto-resolve to subdirectories under `kitchen_root` if unset.
+provisioner will look at when staging the sandbox. When one is not set,
+Test Kitchen looks for the subpath below in three places, in order, and
+uses the first that exists:
+
+1. `<test_base_path>/<suite name>/<subpath>` (usually
+   `test/integration/<suite>/...`)
+2. `<test_base_path>/<subpath>`
+3. `<current directory>/<subpath>`
+
+If none of those exists the option stays unset and nothing is staged for
+it -- the defaults are auto-detected, not invented.
 
 | Option                              | Default subpath                    |
 |-------------------------------------|------------------------------------|
@@ -20,8 +29,8 @@ auto-resolve to subdirectories under `kitchen_root` if unset.
 | `encrypted_data_bag_secret_key_path`| `encrypted_data_bag_secret_key`    |
 | `apply_path` (`cinc_apply` only)    | `apply/`                           |
 
-If a path is set explicitly, the provisioner expands it relative to
-`kitchen_root`.
+If a path is set explicitly it is used as-is, expanded relative to
+`kitchen_root`, and no auto-detection happens.
 
 ### `root_path`
 

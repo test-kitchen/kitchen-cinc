@@ -4,9 +4,35 @@
 
 A Test Kitchen provisioner for [Cinc Client](https://cinc.sh/) (the community distribution of Chef Infra Client) that downloads and installs omnibus packages via the [Cinc omnitruck API](https://omnitruck.cinc.sh/).
 
+## Contents
+
+- [Overview](#overview)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Configuration options](#configuration-options)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Overview
 
 This Test Kitchen plugin provides provisioners that automatically download and install the desired version of Cinc Client on your test instances. This allows you to test your cookbooks against different Cinc versions without pre-installing Cinc on your images.
+
+## Requirements
+
+- Ruby 3.1 or newer.
+- Test Kitchen 4.0 or newer.
+- A Test Kitchen driver for wherever you want to converge — for example
+  [kitchen-vagrant][kitchen_vagrant], [kitchen-dokken][kitchen_dokken], or
+  [kitchen-docker][kitchen_docker].
+- Cookbook dependency resolution needs either
+  [Cinc Workstation](https://cinc.sh/download/) on your `PATH` (for
+  Policyfiles) or the `berkshelf` gem (for Berksfiles). Neither is needed if
+  you stage cookbooks yourself.
+- The `cinc_target` provisioner additionally needs Cinc Client 19.0.0 or newer
+  installed on your workstation and a Train-based transport. See
+  [docs/target-mode.md](docs/target-mode.md).
 
 ## Installation
 
@@ -132,10 +158,11 @@ platforms:
       pid_one_command: /usr/lib/systemd/systemd
 ```
 
-### Configuration Options
+## Configuration options
 
 Every option exposed by the provisioners is documented under
-[`docs/`](docs/README.md):
+[`docs/`](docs/README.md), each with its type, its default, and what it
+actually does:
 
 - [Provisioners](docs/provisioners.md) — overview of `cinc_infra`,
   `cinc_zero`, `cinc_solo`, `cinc_apply`, and `cinc_target`.
@@ -151,6 +178,62 @@ Every option exposed by the provisioners is documented under
 - [Target mode](docs/target-mode.md) — extra requirements and option
   overrides for `cinc_target`.
 
+## Troubleshooting
+
+Start with `kitchen converge -l debug`. That prints the exact install script and
+`cinc-client` command line the provisioner generated, which answers most
+questions on its own. To turn up Cinc's own logging instead of Test Kitchen's,
+set `log_level: debug` (or `trace`) on the provisioner.
+
+### `Cinc Client will run, but do nothing. Is this intended?`
+
+No `Policyfile.rb`, `Berksfile`, `cookbooks/` directory, or `metadata.rb` was
+found under your kitchen root, so there was nothing to converge. kitchen-cinc
+stages an empty placeholder cookbook and carries on. Run kitchen from your
+cookbook's directory, or point `policyfile_path` / `berksfile_path` at the right
+file.
+
+### `policyfile detected, but provisioner ... doesn't support Policyfiles`
+
+Only `cinc_infra`, `cinc_zero`, and `cinc_target` can use Policyfiles.
+`cinc_solo` and `cinc_apply` cannot, and they fail rather than quietly
+resolving cookbooks some other way. Switch to `cinc_infra`, or move the
+Policyfile out of the kitchen root.
+
+### `The 'cinc', 'cinc-cli', 'chef', or 'chef-cli' executables cannot be found`
+
+Policyfile resolution shells out to Cinc Workstation. Install it from
+<https://cinc.sh/download/> and make sure `cinc` is on your `PATH`, or remove
+the Policyfile and use Berkshelf or a plain `cookbooks/` directory instead.
+
+### The install step fails or downloads the wrong package
+
+The install command comes from the [Cinc omnitruck API](https://omnitruck.cinc.sh/)
+via `Mixlib::Install`. Pin what you want with `product_version` and `channel`,
+or bypass omnitruck entirely with `download_url` (plus `checksum`). If your
+image already has Cinc baked in, set `install_strategy: skip` and kitchen-cinc
+will not try to install anything.
+
+### `Need cinc-client installed locally` / `Need version 19.0.0 or higher`
+
+These come from `cinc_target`, which runs `cinc-client` on your workstation
+rather than on the instance. Install Cinc Client 19.0.0 or newer locally. If
+you see a complaint that the version output could not be parsed, run
+`cinc-client -v` yourself and check what it prints.
+
+### `Cinc Target Mode provisioner requires a Train-based transport`
+
+`cinc_target` needs a transport that can hand it a Train URI, such as
+[kitchen-transport-train](https://github.com/tecracer-chef/kitchen-transport-train).
+The stock `ssh` and `winrm` transports will not work with it.
+
+### A `chef_*` option is being ignored
+
+The `chef_*`-prefixed configuration keys are deprecated aliases and are
+forwarded to their `cinc_*` equivalents, but the `cinc_*` key wins when both
+are set. Run `kitchen doctor` to list every deprecated key in your
+`kitchen.yml`.
+
 ## Contributing
 
 Bug reports and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md)
@@ -160,3 +243,7 @@ release process.
 ## License
 
 Apache-2.0 — see [LICENSE](LICENSE) for details.
+
+[kitchen_docker]: https://github.com/test-kitchen/kitchen-docker
+[kitchen_dokken]: https://github.com/test-kitchen/kitchen-dokken
+[kitchen_vagrant]: https://github.com/test-kitchen/kitchen-vagrant
