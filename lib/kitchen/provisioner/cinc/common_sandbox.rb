@@ -16,6 +16,8 @@
 
 require "json" unless defined?(JSON)
 
+require "kitchen/errors"
+
 module Kitchen
   module Provisioner
     module Cinc
@@ -71,10 +73,6 @@ module Kitchen
         # @return [String] path to local sandbox directory
         # @api private
         attr_reader :sandbox_path
-
-        # @return [String] name of the policy_group, nil results in "local"
-        # @api private
-        attr_reader :policy_group
 
         # Generates a list of all files in the cookbooks directory in the
         # sandbox path.
@@ -293,14 +291,33 @@ module Kitchen
             policyfile, sandbox_path,
             logger:,
             always_update: config[:always_update_cookbooks],
-            policy_group:
+            policy_group: config[:policy_group]
           )
           Kitchen.mutex.synchronize do
             policy.compile
           end
-          policy_name = JSON.parse(File.read(policy.lockfile))["name"]
+          policy_name = policy_name_from_lockfile(policy.lockfile)
           policy_group = config[:policy_group] || "local"
           config[:attributes].merge(policy_name:, policy_group:)
+        end
+
+        # Reads the policy name out of a Policyfile lock.
+        #
+        # Reports a missing or unparsable lock as a UserError naming the file,
+        # rather than letting a bare Errno or JSON error escape.
+        #
+        # @param lockfile [String] path to the +.lock.json+
+        # @return [String, nil] the policy name
+        # @raise [UserError] if the lock is missing or is not valid JSON
+        # @api private
+        def policy_name_from_lockfile(lockfile)
+          JSON.parse(File.read(lockfile))["name"]
+        rescue Errno::ENOENT
+          raise UserError, "The Policyfile lock #{lockfile} was not created. " \
+            "Check the output of the `install` command above for the reason."
+        rescue JSON::ParserError => e
+          raise UserError, "The Policyfile lock #{lockfile} is not valid JSON " \
+            "(#{e.message}). Delete it and re-run to regenerate it."
         end
 
         # Performs a Policyfile cookbook resolution inside a common mutex.

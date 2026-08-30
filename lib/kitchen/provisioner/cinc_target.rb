@@ -67,11 +67,15 @@ module Kitchen
 
         instance_name = instance.name
         credentials_file = File.join(kitchen_basepath, ".kitchen", instance_name + ".ini")
+        FileUtils.mkdir_p(File.dirname(credentials_file))
         File.write(credentials_file, connection.credentials_file)
+        # The credentials file holds the transport's secrets (keys, passwords),
+        # so keep it readable only by the user running kitchen.
+        File.chmod(0600, credentials_file)
 
         super.push(
-          "--target #{instance_name}",
-          "--credentials #{credentials_file}"
+          %{--target "#{instance_name}"},
+          %{--credentials "#{credentials_file}"}
         )
       end
 
@@ -94,16 +98,27 @@ module Kitchen
       # Verifies a new enough cinc-client is installed on the workstation.
       #
       # @return [void]
-      # @raise [CincClientNotFound] if the executable is missing
+      # @raise [CincClientNotFound] if the executable is missing, or if its
+      #   version cannot be determined
       # @raise [CincVersionTooLow] if it is older than {MIN_VERSION_REQUIRED}
       def check_local_cinc_client
         debug("Checking for cinc-client version")
 
         begin
-          client_version = `cinc-client -v`.chop.split(":")[-1]
+          version_output = `cinc-client -v`
         rescue Errno::ENOENT => e
           error("Error determining Cinc Client version: #{e.exception.message}")
           raise CincClientNotFound.new("Need cinc-client installed locally")
+        end
+
+        # `cinc-client -v` prints something like "Cinc Client: 19.1.31". Pull the
+        # version out by pattern rather than by splitting on ":", so unexpected
+        # output produces a readable error instead of a malformed-version crash.
+        client_version = version_output.to_s[/\d+(?:\.\d+)+/]
+        if client_version.nil?
+          error("Could not parse a Cinc Client version from `cinc-client -v` " \
+                "output: #{version_output.to_s.strip.inspect}")
+          raise CincClientNotFound.new("Could not determine the local cinc-client version")
         end
 
         minimum_version = Gem::Version.new(MIN_VERSION_REQUIRED)
@@ -145,7 +160,8 @@ module Kitchen
       #
       # @param state [Hash] instance state describing how to connect
       # @return [void]
-      # @raise [Kitchen::ActionFailed] if the transport fails
+      # @raise [Kitchen::ActionFailed] if the transport fails, or if
+      #   cinc-client exits non-zero
       def call(state)
         remote_connection = instance.transport.connection(state)
 
@@ -160,8 +176,14 @@ module Kitchen
 
         # Stream output to logger
         require "open3"
-        Open3.popen2e(run_command) do |_stdin, output, _thread|
+        status = Open3.popen2e(run_command) do |_stdin, output, thread|
           output.each { |line| logger << line }
+          thread.value
+        end
+
+        unless status.success?
+          raise ActionFailed,
+            "Cinc Client exited with code #{status.exitstatus} on #{instance.to_str}"
         end
 
         info("Downloading files from #{instance.to_str}")

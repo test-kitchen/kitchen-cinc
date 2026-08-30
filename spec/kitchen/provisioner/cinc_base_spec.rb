@@ -361,6 +361,25 @@ describe Kitchen::Provisioner::CincBase do
         end.returns(installer)
         cmd
       end
+
+      it "writes the installer into root_path" do
+        config[:root_path] = "/tmp/kitchen"
+        Mixlib::Install.stubs(:new).returns(installer)
+
+        _(cmd).must_include "mkdir -p /tmp/kitchen\n"
+        _(cmd).must_include %{cat > /tmp/kitchen/cinc-installer.sh <<"EOL"}
+        _(cmd).must_include "chmod +x /tmp/kitchen/cinc-installer.sh"
+      end
+
+      it "shell-escapes a root_path containing spaces" do
+        config[:root_path] = "/tmp/kitchen dir"
+        Mixlib::Install.stubs(:new).returns(installer)
+
+        _(cmd).must_include "mkdir -p /tmp/kitchen\\ dir\n"
+        _(cmd).must_include %{cat > /tmp/kitchen\\ dir/cinc-installer.sh <<"EOL"}
+        _(cmd).must_include "chmod +x /tmp/kitchen\\ dir/cinc-installer.sh"
+        _(cmd).wont_include "mkdir -p /tmp/kitchen dir\n"
+      end
     end
 
     describe "for powershell shells on windows os types" do
@@ -898,6 +917,42 @@ describe Kitchen::Provisioner::CincBase do
               }
 
               _(dna_json_data).must_equal(expected)
+            end
+
+            it "passes the configured policy_group through to the resolver" do
+              config[:policy_group] = "staging"
+
+              Kitchen::Provisioner::Cinc::Policyfile.unstub(:new)
+              Kitchen::Provisioner::Cinc::Policyfile.expects(:new).with do |_pf, _path, opts|
+                _(opts[:policy_group]).must_equal "staging"
+              end.at_least_once.returns(resolver)
+
+              provisioner.create_sandbox
+            end
+
+            it "records the configured policy_group in the dna.json" do
+              config[:policy_group] = "staging"
+
+              provisioner.create_sandbox
+
+              dna_json_file = File.join(provisioner.sandbox_path, "dna.json")
+              _(JSON.parse(File.read(dna_json_file))["policy_group"]).must_equal "staging"
+            end
+
+            it "raises a UserError when the policy lock was not created" do
+              FileUtils.rm_f("#{kitchen_root}/Policyfile.lock.json")
+
+              err = _ { provisioner.create_sandbox }.must_raise Kitchen::UserError
+              _(err.message).must_include "was not created"
+            end
+
+            it "raises a UserError when the policy lock is not valid JSON" do
+              File.open("#{kitchen_root}/Policyfile.lock.json", "wb") do |file|
+                file.write("this is not json")
+              end
+
+              err = _ { provisioner.create_sandbox }.must_raise Kitchen::UserError
+              _(err.message).must_include "not valid JSON"
             end
           end
         end

@@ -18,6 +18,7 @@ require "fileutils" unless defined?(FileUtils)
 require "pathname" unless defined?(Pathname)
 require "json" unless defined?(JSON)
 require "cgi" unless defined?(CGI)
+require "shellwords" unless defined?(Shellwords)
 require "kitchen/util"
 
 require_relative "cinc/policyfile"
@@ -27,8 +28,9 @@ require_relative "cinc/common_sandbox"
 begin
   require "chef-config/config"
   require "chef-config/workstation_config_loader"
-rescue LoadError # rubocop:disable Lint/HandleExceptions
-  # This space left intentionally blank.
+rescue LoadError
+  # chef-config is optional; without it we simply skip reading workstation
+  # config and exporting its proxy settings.
 end
 
 module Kitchen
@@ -410,13 +412,17 @@ module Kitchen
 
       # Shell code that installs Cinc Client from a local package file.
       #
+      # Paths are shell-escaped, so a +root_path+ containing spaces or other
+      # shell metacharacters still produces a runnable script.
+      #
       # @return [String] platform-appropriate shell code
       def install_from_file(command)
-        install_file = "#{config[:root_path]}/cinc-installer.sh"
+        root_path = Shellwords.escape(config[:root_path])
+        install_file = Shellwords.escape("#{config[:root_path]}/cinc-installer.sh")
         script = []
-        script << "mkdir -p #{config[:root_path]}"
+        script << "mkdir -p #{root_path}"
         script << "if [ $? -ne 0 ]; then"
-        script << "  echo Kitchen config setting root_path: '#{config[:root_path]}' not creatable by regular user "
+        script << "  echo Kitchen config setting root_path: #{root_path} not creatable by regular user "
         script << "  exit 1"
         script << "fi"
         script << "cat > #{install_file} <<\"EOL\""
