@@ -361,6 +361,25 @@ describe Kitchen::Provisioner::CincBase do
         end.returns(installer)
         cmd
       end
+
+      it "writes the installer into root_path" do
+        config[:root_path] = "/tmp/kitchen"
+        Mixlib::Install.stubs(:new).returns(installer)
+
+        _(cmd).must_include "mkdir -p /tmp/kitchen\n"
+        _(cmd).must_include %{cat > /tmp/kitchen/cinc-installer.sh <<"EOL"}
+        _(cmd).must_include "chmod +x /tmp/kitchen/cinc-installer.sh"
+      end
+
+      it "shell-escapes a root_path containing spaces" do
+        config[:root_path] = "/tmp/kitchen dir"
+        Mixlib::Install.stubs(:new).returns(installer)
+
+        _(cmd).must_include "mkdir -p /tmp/kitchen\\ dir\n"
+        _(cmd).must_include %{cat > /tmp/kitchen\\ dir/cinc-installer.sh <<"EOL"}
+        _(cmd).must_include "chmod +x /tmp/kitchen\\ dir/cinc-installer.sh"
+        _(cmd).wont_include "mkdir -p /tmp/kitchen dir\n"
+      end
     end
 
     describe "for powershell shells on windows os types" do
