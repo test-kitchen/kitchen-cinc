@@ -17,6 +17,7 @@ jobs:
     env:
       KITCHEN_LOCAL_YAML: kitchen.exec.yml
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -31,8 +32,8 @@ jobs:
         run: |
           bundle config set --local with 'integration'
           bundle install
-      - name: Verify Exec (Ubuntu)
-        run: bundle exec kitchen verify default-localhost
+      - name: Test Exec (Ubuntu)
+        run: bundle exec kitchen test default-localhost
       - name: Capture kitchen.log on failure
         if: failure()
         run: |
@@ -60,6 +61,7 @@ jobs:
     env:
       KITCHEN_LOCAL_YAML: kitchen.exec.yml
     runs-on: macos-latest
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -74,8 +76,8 @@ jobs:
         run: |
           bundle config set --local with 'integration'
           bundle install
-      - name: Verify Exec (macOS)
-        run: bundle exec kitchen verify default-localhost
+      - name: Test Exec (macOS)
+        run: bundle exec kitchen test default-localhost
       - name: Capture kitchen.log on failure
         if: failure()
         run: |
@@ -118,8 +120,8 @@ jobs:
         run: |
           bundle config set --local with integration
           bundle install
-      - name: Verify Exec (Windows)
-        run: bundle exec kitchen verify default-windows-localhost
+      - name: Test Exec (Windows)
+        run: bundle exec kitchen test default-windows-localhost
       - name: Capture kitchen.log on failure
         if: failure()
         shell: pwsh
